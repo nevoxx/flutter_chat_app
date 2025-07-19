@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
-import 'main.dart';
-import 'server_connection_page.dart';
+import '../main.dart';
+import '../pages/loading_page.dart';
 
 final authProvider = StateNotifierProvider<AuthController, AsyncValue<void>>((
   ref,
@@ -35,7 +35,7 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
         state = const AsyncValue.data(null);
 
         navigatorKey.currentState?.pushReplacement(
-          MaterialPageRoute(builder: (_) => const ServerConnectionPage()),
+          MaterialPageRoute(builder: (_) => const LoadingPage()),
         );
       } else {
         throw Exception('Invalid credentials');

@@ -65,5 +65,17 @@ class SocketController extends StateNotifier<SocketStatus> {
     state = SocketStatus.disconnected;
   }
 
+  Future<void> reconnect() async {
+    if (state == SocketStatus.connecting) return;
+
+    _socket?.disconnect();
+    state = SocketStatus.disconnected;
+
+    // Wait a bit before reconnecting
+    await Future.delayed(const Duration(seconds: 1));
+
+    await _init();
+  }
+
   IO.Socket? get socket => _socket;
 }
