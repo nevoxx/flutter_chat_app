@@ -108,6 +108,7 @@ class _UserListWidgetState extends State<UserListWidget> {
 
   Widget _buildUserItem(User user) {
     final isCurrentUser = user.id == widget.currentUserId;
+    final isOnline = user.connectionState?.isOnline ?? false;
 
     return ListTile(
       leading: Stack(
@@ -120,6 +121,23 @@ class _UserListWidgetState extends State<UserListWidget> {
             child: Text(
               user.displayName[0].toUpperCase(),
               style: const TextStyle(color: Colors.white),
+            ),
+          ),
+          // Online status indicator
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: isOnline ? Colors.green : Colors.grey,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  width: 2,
+                ),
+              ),
             ),
           ),
         ],
@@ -139,6 +157,7 @@ class _UserListWidgetState extends State<UserListWidget> {
 
   Widget _buildCollapsedUserItem(User user) {
     final isCurrentUser = user.id == widget.currentUserId;
+    final isOnline = user.connectionState?.isOnline ?? false;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -153,6 +172,23 @@ class _UserListWidgetState extends State<UserListWidget> {
               child: Text(
                 user.displayName[0].toUpperCase(),
                 style: const TextStyle(color: Colors.white, fontSize: 12),
+              ),
+            ),
+          ),
+          // Online status indicator
+          Positioned(
+            bottom: 0,
+            right: 8,
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: isOnline ? Colors.green : Colors.grey,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.surfaceVariant,
+                  width: 2,
+                ),
               ),
             ),
           ),

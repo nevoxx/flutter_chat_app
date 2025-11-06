@@ -1,5 +1,6 @@
 import 'attachment.dart';
 import 'role.dart';
+import 'user_connection_state.dart';
 
 class User {
   final String id;
@@ -11,6 +12,7 @@ class User {
   final List<Role> roles;
   final Attachment? profilePicture;
   final List<String> permissions;
+  final UserConnectionState? connectionState;
 
   const User({
     required this.id,
@@ -22,29 +24,37 @@ class User {
     required this.roles,
     this.profilePicture,
     required this.permissions,
+    this.connectionState,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    // Handle both direct user object and nested API response structure
+    final userData = json.containsKey('user') ? json['user'] as Map<String, dynamic> : json;
+    final connectionStateData = json.containsKey('connectionState') ? json['connectionState'] as Map<String, dynamic>? : null;
+    
     return User(
-      id: json['id'] as String,
-      username: json['username'] as String,
-      displayName: json['displayName'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
-      isSystemUser: json['isSystemUser'] as int,
+      id: userData['id'] as String,
+      username: userData['username'] as String,
+      displayName: userData['displayName'] as String,
+      createdAt: DateTime.parse(userData['createdAt'] as String),
+      updatedAt: DateTime.parse(userData['updatedAt'] as String),
+      isSystemUser: userData['isSystemUser'] as int,
       roles:
-          (json['roles'] as List<dynamic>?)
+          (userData['roles'] as List<dynamic>?)
               ?.map((e) => Role.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      profilePicture: json['profilePicture'] != null
-          ? Attachment.fromJson(json['profilePicture'] as Map<String, dynamic>)
+      profilePicture: userData['profilePicture'] != null
+          ? Attachment.fromJson(userData['profilePicture'] as Map<String, dynamic>)
           : null,
       permissions:
-          (json['permissions'] as List<dynamic>?)
+          (userData['permissions'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
+      connectionState: connectionStateData != null
+          ? UserConnectionState.fromJson(connectionStateData)
+          : null,
     );
   }
 
@@ -59,6 +69,7 @@ class User {
       'roles': roles.map((e) => e.toJson()).toList(),
       'profilePicture': profilePicture?.toJson(),
       'permissions': permissions,
+      'connectionState': connectionState?.toJson(),
     };
   }
 
@@ -72,6 +83,7 @@ class User {
     List<Role>? roles,
     Attachment? profilePicture,
     List<String>? permissions,
+    UserConnectionState? connectionState,
   }) {
     return User(
       id: id ?? this.id,
@@ -83,6 +95,7 @@ class User {
       roles: roles ?? this.roles,
       profilePicture: profilePicture ?? this.profilePicture,
       permissions: permissions ?? this.permissions,
+      connectionState: connectionState ?? this.connectionState,
     );
   }
 }

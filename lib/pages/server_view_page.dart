@@ -1,140 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/message.dart';
 import '../models/channel.dart';
 import '../models/user.dart';
+import '../providers/data_provider.dart';
 import '../widgets/message_widget.dart';
 import '../widgets/message_input_widget.dart';
 import '../widgets/channel_list_widget.dart';
 import '../widgets/user_list_widget.dart';
 import 'login_page.dart';
 
-class ServerViewPage extends StatefulWidget {
+class ServerViewPage extends ConsumerStatefulWidget {
   const ServerViewPage({super.key});
 
   @override
-  State<ServerViewPage> createState() => _ServerViewPageState();
+  ConsumerState<ServerViewPage> createState() => _ServerViewPageState();
 }
 
-class _ServerViewPageState extends State<ServerViewPage> {
-  String? _selectedChannelId = 'general';
+class _ServerViewPageState extends ConsumerState<ServerViewPage> {
   bool _usersSidebarCollapsed = false;
-
-  // Dummy data
-  late List<Channel> _channels;
-  late List<User> _users;
-  late List<Message> _messages;
 
   @override
   void initState() {
     super.initState();
-    _initializeDummyData();
+    _initializeDummyMessages();
   }
 
-  void _initializeDummyData() {
-    _channels = [
-      Channel(
-        id: 'general',
-        name: 'General',
-        sortOrder: 1,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        isDefault: 1,
-      ),
-      Channel(
-        id: 'random',
-        name: 'Random',
-        sortOrder: 2,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        isDefault: 0,
-      ),
-      Channel(
-        id: 'help',
-        name: 'Help',
-        sortOrder: 3,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        isDefault: 0,
-      ),
-      Channel(
-        id: 'announcements',
-        name: 'Announcements',
-        sortOrder: 4,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        isDefault: 0,
-      ),
-    ];
-
-    _users = [
-      User(
-        id: '1',
-        username: 'user1',
-        displayName: 'User 1',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        isSystemUser: 0,
-        roles: [],
-        permissions: [],
-      ),
-      User(
-        id: '2',
-        username: 'user2',
-        displayName: 'User 2',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        isSystemUser: 0,
-        roles: [],
-        permissions: [],
-      ),
-      User(
-        id: '3',
-        username: 'user3',
-        displayName: 'User 3',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        isSystemUser: 0,
-        roles: [],
-        permissions: [],
-      ),
-      User(
-        id: '4',
-        username: 'user4',
-        displayName: 'User 4',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        isSystemUser: 0,
-        roles: [],
-        permissions: [],
-      ),
-      User(
-        id: '5',
-        username: 'user5',
-        displayName: 'User 5',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        isSystemUser: 0,
-        roles: [],
-        permissions: [],
-      ),
-      User(
-        id: 'me',
-        username: 'currentuser',
-        displayName: 'You',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        isSystemUser: 0,
-        roles: [],
-        permissions: [],
-      ),
-    ];
-
-    _messages = _generateDummyMessages();
+  void _initializeDummyMessages() {
+    // Generate dummy messages for the first channel
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final channels = ref.read(channelsProvider);
+      if (channels.isNotEmpty) {
+        final firstChannel = channels.first;
+        final dummyMessages = _generateDummyMessages(firstChannel.id);
+        ref.read(messagesProvider.notifier).setMessagesForChannel(
+          firstChannel.id,
+          dummyMessages,
+        );
+      }
+    });
   }
 
-  List<Message> _generateDummyMessages() {
-    final messages = [
+  List<Message> _generateDummyMessages(String channelId) {
+    final messageContents = [
       'Hey everyone! 👋',
       'How\'s it going?',
       'I just finished working on that new feature. It was quite challenging but I think it turned out well. The implementation involved several components and required careful consideration of the user experience.',
@@ -157,21 +66,35 @@ class _ServerViewPageState extends State<ServerViewPage> {
       'Got it, thanks for the reminder!',
     ];
 
+    // Get users from provider
+    final usersAsync = ref.read(usersProvider);
+    final users = usersAsync.maybeWhen(
+      data: (data) => data,
+      orElse: () => <User>[],
+    );
+    
+    if (users.isEmpty) {
+      return [];
+    }
+
     return List.generate(20, (index) {
-      final isOwnMessage = index % 3 == 0;
-      final user = isOwnMessage
-          ? _users.last
-          : _users[index % (_users.length - 1)];
-      final channel = _channels.first;
+      final user = users[index % users.length];
 
       return Message(
         id: 'msg_$index',
-        content: messages[index % messages.length],
-        channelId: channel.id,
+        content: messageContents[index % messageContents.length],
+        channelId: channelId,
         userId: user.id,
         createdAt: DateTime.now().subtract(Duration(minutes: 20 - index)),
         updatedAt: DateTime.now().subtract(Duration(minutes: 20 - index)),
-        channel: channel,
+        channel: Channel(
+          id: channelId,
+          name: '',
+          sortOrder: 0,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          isDefault: 0,
+        ),
         attachments: [],
       );
     });
@@ -211,9 +134,7 @@ class _ServerViewPageState extends State<ServerViewPage> {
   }
 
   void _onChannelSelected(String channelId) {
-    setState(() {
-      _selectedChannelId = channelId;
-    });
+    ref.read(selectedChannelProvider.notifier).state = channelId;
   }
 
   void _onSendMessage(String content) {
@@ -232,9 +153,27 @@ class _ServerViewPageState extends State<ServerViewPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 900;
 
+    // Watch providers
+    final channels = ref.watch(channelsProvider);
+    final usersAsync = ref.watch(usersProvider);
+    final selectedChannelId = ref.watch(selectedChannelProvider);
+
+    // Get current channel name
+    final currentChannel = channels.firstWhere(
+      (ch) => ch.id == selectedChannelId,
+      orElse: () => channels.isNotEmpty ? channels.first : Channel(
+        id: '',
+        name: 'Unknown',
+        sortOrder: 0,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        isDefault: 0,
+      ),
+    );
+
     return Scaffold(
       appBar: AppBar(
-        title: Row(children: [Text('# ${_selectedChannelId ?? 'general'}')]),
+        title: Row(children: [Text('# ${currentChannel.name}')]),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           // Connection status indicator
@@ -265,8 +204,8 @@ class _ServerViewPageState extends State<ServerViewPage> {
           // Channels Sidebar
           if (isDesktop) ...[
             ChannelListWidget(
-              channels: _channels,
-              selectedChannelId: _selectedChannelId,
+              channels: channels,
+              selectedChannelId: selectedChannelId,
               onChannelSelected: _onChannelSelected,
               onAddChannel: () {
                 // TODO: Implement add channel
@@ -290,11 +229,15 @@ class _ServerViewPageState extends State<ServerViewPage> {
           // Users Sidebar
           if (isDesktop) ...[
             const VerticalDivider(width: 1),
-            UserListWidget(
-              users: _users,
-              isCollapsed: _usersSidebarCollapsed,
-              onToggleCollapse: _onToggleUsersSidebar,
-              currentUserId: 'me',
+            usersAsync.when(
+              data: (users) => UserListWidget(
+                users: users,
+                isCollapsed: _usersSidebarCollapsed,
+                onToggleCollapse: _onToggleUsersSidebar,
+                currentUserId: 'me',
+              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) => Center(child: Text('Error: $err')),
             ),
           ],
         ],
@@ -306,6 +249,26 @@ class _ServerViewPageState extends State<ServerViewPage> {
   }
 
   Widget _buildMessagesArea() {
+    final channels = ref.watch(channelsProvider);
+    final selectedChannelId = ref.watch(selectedChannelProvider);
+    final allMessages = ref.watch(messagesProvider);
+    
+    final currentChannel = channels.firstWhere(
+      (ch) => ch.id == selectedChannelId,
+      orElse: () => channels.isNotEmpty ? channels.first : Channel(
+        id: '',
+        name: 'Unknown',
+        sortOrder: 0,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        isDefault: 0,
+      ),
+    );
+
+    final messages = selectedChannelId != null 
+        ? allMessages[selectedChannelId] ?? []
+        : [];
+
     return Container(
       color: Theme.of(context).colorScheme.surface,
       child: Column(
@@ -323,7 +286,7 @@ class _ServerViewPageState extends State<ServerViewPage> {
               children: [
                 const SizedBox(width: 8),
                 Text(
-                  '# ${_selectedChannelId ?? 'general'}',
+                  '# ${currentChannel.name}',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -343,16 +306,25 @@ class _ServerViewPageState extends State<ServerViewPage> {
           ),
           // Messages List
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                return MessageWidget(
-                  message: _messages[index],
-                  currentUserId: 'me',
-                );
-              },
-            ),
+            child: messages.isEmpty
+                ? Center(
+                    child: Text(
+                      'No messages yet',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      return MessageWidget(
+                        message: messages[index],
+                        currentUserId: 'me',
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -360,11 +332,14 @@ class _ServerViewPageState extends State<ServerViewPage> {
   }
 
   Widget _buildChannelsDrawer() {
+    final channels = ref.watch(channelsProvider);
+    final selectedChannelId = ref.watch(selectedChannelProvider);
+
     return Drawer(
       child: SafeArea(
         child: ChannelListWidget(
-          channels: _channels,
-          selectedChannelId: _selectedChannelId,
+          channels: channels,
+          selectedChannelId: selectedChannelId,
           onChannelSelected: _onChannelSelected,
           onAddChannel: () {
             // TODO: Implement add channel
@@ -375,13 +350,19 @@ class _ServerViewPageState extends State<ServerViewPage> {
   }
 
   Widget _buildUsersDrawer() {
+    final usersAsync = ref.watch(usersProvider);
+
     return Drawer(
       child: SafeArea(
-        child: UserListWidget(
-          users: _users,
-          isCollapsed: false,
-          onToggleCollapse: () {},
-          currentUserId: 'me',
+        child: usersAsync.when(
+          data: (users) => UserListWidget(
+            users: users,
+            isCollapsed: false,
+            onToggleCollapse: () {},
+            currentUserId: 'me',
+          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(child: Text('Error loading users')),
         ),
       ),
     );
