@@ -127,7 +127,7 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(
-            color: Theme.of(context).dividerColor,
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
             height: 1,
           ),
         ),

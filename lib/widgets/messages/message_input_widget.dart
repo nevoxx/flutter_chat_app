@@ -34,7 +34,7 @@ class _MessageInputWidgetState extends State<MessageInputWidget> {
         color: Theme.of(context).colorScheme.surface,
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).dividerColor,
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -66,9 +66,7 @@ class _MessageInputWidgetState extends State<MessageInputWidget> {
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFF40444B)
-                    : const Color(0xFFEBEDEF),
+                fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,

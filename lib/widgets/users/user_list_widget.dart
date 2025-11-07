@@ -26,8 +26,7 @@ class _UserListWidgetState extends State<UserListWidget> {
         .where((u) => u.connectionState?.isOnline ?? false)
         .length;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
+    return Container(
       width: widget.isCollapsed ? 60 : 250,
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
       child: Column(

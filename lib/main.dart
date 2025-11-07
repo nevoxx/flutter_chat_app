@@ -23,6 +23,7 @@ class MyApp extends ConsumerWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
+      themeAnimationDuration: Duration.zero,
       navigatorKey: navigatorKey,
       home: const LoginPage(),
     );
