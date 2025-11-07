@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/user.dart';
+import '../../models/user.dart';
 
 class UserListWidget extends StatefulWidget {
   final List<User> users;

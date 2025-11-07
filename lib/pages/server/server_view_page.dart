@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../models/channel.dart';
-import '../providers/data_provider.dart';
-import '../widgets/message_widget.dart';
-import '../widgets/message_input_widget.dart';
-import '../widgets/channel_list_widget.dart';
-import '../widgets/user_list_widget.dart';
-import 'login_page.dart';
+import '../../models/channel.dart';
+import '../../providers/channels_provider.dart';
+import '../../providers/messages_provider.dart';
+import '../../providers/users_provider.dart';
+import '../../providers/app_state_provider.dart';
+import '../../widgets/messages/message_widget.dart';
+import '../../widgets/messages/message_input_widget.dart';
+import '../../widgets/channels/channel_list_widget.dart';
+import '../../widgets/users/user_list_widget.dart';
+import '../auth/login_page.dart';
 
 class ServerViewPage extends ConsumerStatefulWidget {
   const ServerViewPage({super.key});
@@ -73,7 +76,7 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
   }
 
   void _onChannelSelected(String channelId) {
-    ref.read(selectedChannelProvider.notifier).state = channelId;
+    ref.read(appStateProvider.notifier).setSelectedChannel(channelId);
     _loadMessagesForChannel(channelId);
   }
 

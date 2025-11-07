@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'pages/login_page.dart';
+import 'pages/auth/login_page.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 

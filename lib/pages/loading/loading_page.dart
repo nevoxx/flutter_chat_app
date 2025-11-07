@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/socket_provider.dart';
-import '../providers/data_provider.dart';
-import 'server_view_page.dart';
-import 'login_page.dart';
+import '../../providers/socket_provider.dart';
+import '../../providers/server_info_provider.dart';
+import '../../providers/users_provider.dart';
+import '../server/server_view_page.dart';
+import '../auth/login_page.dart';
 
 class LoadingPage extends ConsumerStatefulWidget {
   const LoadingPage({super.key});
