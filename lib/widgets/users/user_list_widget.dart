@@ -22,10 +22,14 @@ class UserListWidget extends StatefulWidget {
 class _UserListWidgetState extends State<UserListWidget> {
   @override
   Widget build(BuildContext context) {
+    final onlineUsers = widget.users
+        .where((u) => u.connectionState?.isOnline ?? false)
+        .length;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       width: widget.isCollapsed ? 60 : 250,
-      color: Theme.of(context).colorScheme.surfaceVariant,
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
       child: Column(
         children: [
           // Header
@@ -34,30 +38,18 @@ class _UserListWidgetState extends State<UserListWidget> {
             child: Row(
               children: [
                 if (!widget.isCollapsed) ...[
-                  const Icon(Icons.people),
+                  Icon(
+                    Icons.people,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Users',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${widget.users.length}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                      'Members — $onlineUsers',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -66,8 +58,8 @@ class _UserListWidgetState extends State<UserListWidget> {
                   onPressed: widget.onToggleCollapse,
                   icon: Icon(
                     widget.isCollapsed
-                        ? Icons.chevron_right
-                        : Icons.chevron_left,
+                        ? Icons.chevron_left
+                        : Icons.chevron_right,
                   ),
                   tooltip: widget.isCollapsed ? 'Expand' : 'Collapse',
                 ),
@@ -114,13 +106,14 @@ class _UserListWidgetState extends State<UserListWidget> {
       leading: Stack(
         children: [
           CircleAvatar(
+            radius: 18,
             backgroundColor: isCurrentUser
                 ? Theme.of(context).colorScheme.primary
                 : Colors.primaries[user.username.hashCode %
                       Colors.primaries.length],
             child: Text(
               user.displayName[0].toUpperCase(),
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Colors.white, fontSize: 14),
             ),
           ),
           // Online status indicator
@@ -128,14 +121,16 @@ class _UserListWidgetState extends State<UserListWidget> {
             bottom: 0,
             right: 0,
             child: Container(
-              width: 12,
-              height: 12,
+              width: 14,
+              height: 14,
               decoration: BoxDecoration(
-                color: isOnline ? Colors.green : Colors.grey,
+                color: isOnline
+                    ? Colors.green
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.surfaceVariant,
-                  width: 2,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  width: 3,
                 ),
               ),
             ),
@@ -144,13 +139,13 @@ class _UserListWidgetState extends State<UserListWidget> {
       ),
       title: Text(
         user.displayName,
-        style: TextStyle(
-          fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.normal,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: isCurrentUser ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
       subtitle: Text(
         user.username,
-        style: TextStyle(color: Colors.grey, fontSize: 12),
+        style: Theme.of(context).textTheme.bodySmall,
       ),
     );
   }
@@ -159,40 +154,48 @@ class _UserListWidgetState extends State<UserListWidget> {
     final isCurrentUser = user.id == widget.currentUserId;
     final isOnline = user.connectionState?.isOnline ?? false;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Stack(
-        children: [
-          Center(
-            child: CircleAvatar(
-              backgroundColor: isCurrentUser
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.primaries[user.username.hashCode %
-                        Colors.primaries.length],
-              child: Text(
-                user.displayName[0].toUpperCase(),
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
-            ),
-          ),
-          // Online status indicator
-          Positioned(
-            bottom: 0,
-            right: 8,
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: isOnline ? Colors.green : Colors.grey,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.surfaceVariant,
-                  width: 2,
+    return Tooltip(
+      message: '${user.displayName} (${user.username})',
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Stack(
+          children: [
+            Center(
+              child: CircleAvatar(
+                radius: 16,
+                backgroundColor: isCurrentUser
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.primaries[user.username.hashCode %
+                          Colors.primaries.length],
+                child: Text(
+                  user.displayName[0].toUpperCase(),
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
                 ),
               ),
             ),
-          ),
-        ],
+            // Online status indicator
+            Positioned(
+              bottom: 0,
+              right: 10,
+              child: Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: isOnline
+                      ? Colors.green
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

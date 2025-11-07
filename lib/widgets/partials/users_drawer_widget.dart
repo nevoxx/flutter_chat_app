@@ -21,11 +21,14 @@ class UsersDrawerWidget extends ConsumerWidget {
           data: (users) => UserListWidget(
             users: users,
             isCollapsed: false,
-            onToggleCollapse: () {},
+            onToggleCollapse: () {
+              // Close the drawer on mobile
+              Navigator.of(context).pop();
+            },
             currentUserId: currentUserId ?? 'me',
           ),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('Error loading users')),
+          error: (err, stack) => const Center(child: Text('Error loading users')),
         ),
       ),
     );

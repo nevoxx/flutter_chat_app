@@ -98,8 +98,7 @@ class _LoadingPageState extends ConsumerState<LoadingPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Loading'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text('Connecting'),
       ),
       body: Center(
         child: _hasError

@@ -12,6 +12,7 @@ import '../../widgets/users/user_list_widget.dart';
 import '../../widgets/chat/messages_area_widget.dart';
 import '../../widgets/partials/channels_drawer_widget.dart';
 import '../../widgets/partials/users_drawer_widget.dart';
+import '../../widgets/ui/theme_toggle_button.dart';
 import '../auth/login_page.dart';
 
 class ServerViewPage extends ConsumerStatefulWidget {
@@ -118,24 +119,57 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(children: [Text('# ${currentChannel.name}')]),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Row(children: [
+          const Icon(Icons.tag, size: 20),
+          const SizedBox(width: 8),
+          Text(currentChannel.name),
+        ]),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            color: Theme.of(context).dividerColor,
+            height: 1,
+          ),
+        ),
         actions: [
+          // Users button (mobile/tablet only)
+          if (!isDesktop)
+            Builder(
+              builder: (context) => IconButton(
+                onPressed: () => Scaffold.of(context).openEndDrawer(),
+                icon: const Icon(Icons.people),
+                tooltip: 'Show Members',
+              ),
+            ),
           // Connection status indicator
           Container(
-            margin: const EdgeInsets.only(right: 16),
+            margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.green.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.wifi, color: Colors.green, size: 20),
-                const SizedBox(width: 4),
-                Text(
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Colors.green,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Text(
                   'Connected',
-                  style: TextStyle(fontSize: 12, color: Colors.green),
+                  style: TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
           ),
+          // Theme toggle button
+          const ThemeToggleButton(),
           // Logout button
           IconButton(
             onPressed: () => _logout(context),

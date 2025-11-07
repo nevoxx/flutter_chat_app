@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/channel.dart';
-import '../../providers/channels_provider.dart';
 import '../../providers/messages_provider.dart';
 import '../../providers/app_state_provider.dart';
 import '../messages/message_widget.dart';
@@ -16,21 +14,8 @@ class MessagesAreaWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final channels = ref.watch(channelsProvider);
     final selectedChannelId = ref.watch(selectedChannelProvider);
     final allMessages = ref.watch(messagesProvider);
-    
-    final currentChannel = channels.firstWhere(
-      (ch) => ch.id == selectedChannelId,
-      orElse: () => channels.isNotEmpty ? channels.first : Channel(
-        id: '',
-        name: 'Unknown',
-        sortOrder: 0,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        isDefault: 0,
-      ),
-    );
 
     final messagesAsync = selectedChannelId != null 
         ? allMessages[selectedChannelId]
@@ -40,37 +25,6 @@ class MessagesAreaWidget extends ConsumerWidget {
       color: Theme.of(context).colorScheme.surface,
       child: Column(
         children: [
-          // Channel Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(
-                bottom: BorderSide(color: Theme.of(context).dividerColor),
-              ),
-            ),
-            child: Row(
-              children: [
-                const SizedBox(width: 8),
-                Text(
-                  '# ${currentChannel.name}',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                if (MediaQuery.of(context).size.width <= 900) ...[
-                  Builder(
-                    builder: (context) => IconButton(
-                      onPressed: () => Scaffold.of(context).openEndDrawer(),
-                      icon: const Icon(Icons.people),
-                      tooltip: 'Users',
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
           // Messages List
           Expanded(
             child: messagesAsync == null
