@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/user.dart';
+import '../../providers/auth_provider.dart';
+import 'user_avatar_widget.dart';
 
-class UserListWidget extends StatefulWidget {
+class UserListWidget extends ConsumerStatefulWidget {
   final List<User> users;
   final bool isCollapsed;
   final VoidCallback onToggleCollapse;
@@ -16,13 +19,28 @@ class UserListWidget extends StatefulWidget {
   });
 
   @override
-  State<UserListWidget> createState() => _UserListWidgetState();
+  ConsumerState<UserListWidget> createState() => _UserListWidgetState();
 }
 
-class _UserListWidgetState extends State<UserListWidget> {
+class _UserListWidgetState extends ConsumerState<UserListWidget> {
   @override
   Widget build(BuildContext context) {
-    final onlineUsers = widget.users
+    // Sort users: online users first, then by display name
+    final sortedUsers = List<User>.from(widget.users)
+      ..sort((a, b) {
+        final aOnline = a.connectionState?.isOnline ?? false;
+        final bOnline = b.connectionState?.isOnline ?? false;
+        
+        // First, sort by online status (online users first)
+        if (aOnline != bOnline) {
+          return bOnline ? 1 : -1; // Online users come first
+        }
+        
+        // Then, sort by display name
+        return a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase());
+      });
+
+    final onlineUsers = sortedUsers
         .where((u) => u.connectionState?.isOnline ?? false)
         .length;
 
@@ -69,29 +87,29 @@ class _UserListWidgetState extends State<UserListWidget> {
           // Users List
           Expanded(
             child: widget.isCollapsed
-                ? _buildCollapsedUsersList()
-                : _buildExpandedUsersList(),
+                ? _buildCollapsedUsersList(sortedUsers)
+                : _buildExpandedUsersList(sortedUsers),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildExpandedUsersList() {
+  Widget _buildExpandedUsersList(List<User> sortedUsers) {
     return ListView.builder(
-      itemCount: widget.users.length,
+      itemCount: sortedUsers.length,
       itemBuilder: (context, index) {
-        final user = widget.users[index];
+        final user = sortedUsers[index];
         return _buildUserItem(user);
       },
     );
   }
 
-  Widget _buildCollapsedUsersList() {
+  Widget _buildCollapsedUsersList(List<User> sortedUsers) {
     return ListView.builder(
-      itemCount: widget.users.length,
+      itemCount: sortedUsers.length,
       itemBuilder: (context, index) {
-        final user = widget.users[index];
+        final user = sortedUsers[index];
         return _buildCollapsedUserItem(user);
       },
     );
@@ -99,42 +117,15 @@ class _UserListWidgetState extends State<UserListWidget> {
 
   Widget _buildUserItem(User user) {
     final isCurrentUser = user.id == widget.currentUserId;
-    final isOnline = user.connectionState?.isOnline ?? false;
+    final accessToken = ref.watch(accessTokenProvider).value;
 
     return ListTile(
-      leading: Stack(
-        children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: isCurrentUser
-                ? Theme.of(context).colorScheme.primary
-                : Colors.primaries[user.username.hashCode %
-                      Colors.primaries.length],
-            child: Text(
-              user.displayName[0].toUpperCase(),
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-            ),
-          ),
-          // Online status indicator
-          Positioned(
-            bottom: 0,
-            right: 0,
-            child: Container(
-              width: 14,
-              height: 14,
-              decoration: BoxDecoration(
-                color: isOnline
-                    ? Colors.green
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  width: 3,
-                ),
-              ),
-            ),
-          ),
-        ],
+      leading: UserAvatar(
+        user: user,
+        radius: 18,
+        showOnlineStatus: true,
+        currentUserId: widget.currentUserId,
+        accessToken: accessToken,
       ),
       title: Text(
         user.displayName,
@@ -150,50 +141,20 @@ class _UserListWidgetState extends State<UserListWidget> {
   }
 
   Widget _buildCollapsedUserItem(User user) {
-    final isCurrentUser = user.id == widget.currentUserId;
-    final isOnline = user.connectionState?.isOnline ?? false;
+    final accessToken = ref.watch(accessTokenProvider).value;
 
     return Tooltip(
       message: '${user.displayName} (${user.username})',
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Stack(
-          children: [
-            Center(
-              child: CircleAvatar(
-                radius: 16,
-                backgroundColor: isCurrentUser
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.primaries[user.username.hashCode %
-                          Colors.primaries.length],
-                child: Text(
-                  user.displayName[0].toUpperCase(),
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ),
-            ),
-            // Online status indicator
-            Positioned(
-              bottom: 0,
-              right: 10,
-              child: Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: isOnline
-                      ? Colors.green
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
-                    width: 2,
-                  ),
-                ),
-              ),
-            ),
-          ],
+        child: Center(
+          child: UserAvatar(
+            user: user,
+            radius: 16,
+            showOnlineStatus: true,
+            currentUserId: widget.currentUserId,
+            accessToken: accessToken,
+          ),
         ),
       ),
     );

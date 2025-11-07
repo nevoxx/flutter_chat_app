@@ -12,6 +12,12 @@ final authProvider = StateNotifierProvider<AuthController, AsyncValue<void>>((
   return AuthController(ref);
 });
 
+// Provider to get the access token
+final accessTokenProvider = FutureProvider<String?>((ref) async {
+  const storage = FlutterSecureStorage();
+  return await storage.read(key: 'accessToken');
+});
+
 class AuthController extends StateNotifier<AsyncValue<void>> {
   AuthController(this.ref) : super(const AsyncValue.data(null));
 

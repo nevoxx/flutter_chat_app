@@ -73,9 +73,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               children: [
                                 Text(
                                   'Welcome Back!',
-                                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
                                 ),
                                 const ThemeToggleButton(),
                               ],
@@ -83,12 +84,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             const SizedBox(height: 8),
                             Text(
                               'Sign in to continue',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
                             ),
                             const SizedBox(height: 32),
-                            
+
                             // Hostname field
                             TextFormField(
                               controller: _hostnameController,
@@ -106,7 +110,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               },
                             ),
                             const SizedBox(height: 16),
-                            
+
                             // Username field
                             TextFormField(
                               controller: _usernameController,
@@ -124,7 +128,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               },
                             ),
                             const SizedBox(height: 16),
-                            
+
                             // Password field
                             TextFormField(
                               controller: _passwordController,
@@ -144,20 +148,24 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               },
                             ),
                             const SizedBox(height: 24),
-                            
+
                             // Error message
                             if (authState.hasError)
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.error.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
                                   children: [
                                     Icon(
                                       Icons.error_outline,
-                                      color: Theme.of(context).colorScheme.error,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
                                       size: 20,
                                     ),
                                     const SizedBox(width: 8),
@@ -165,7 +173,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                       child: Text(
                                         'Login failed: ${authState.error}',
                                         style: TextStyle(
-                                          color: Theme.of(context).colorScheme.error,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.error,
                                           fontSize: 13,
                                         ),
                                       ),
@@ -174,12 +184,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 ),
                               ),
                             if (authState.hasError) const SizedBox(height: 16),
-                            
+
                             // Login button
                             SizedBox(
                               height: 48,
                               child: authState.isLoading
-                                  ? const Center(child: CircularProgressIndicator())
+                                  ? const Center(
+                                      child: CircularProgressIndicator(),
+                                    )
                                   : ElevatedButton(
                                       onPressed: _submit,
                                       child: const Text(
@@ -192,14 +204,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                     ),
                             ),
                             const SizedBox(height: 16),
-                            
+
                             // Create account button
                             TextButton(
                               onPressed: () {
                                 // TODO: Navigate to create account page
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Account creation coming soon!'),
+                                    content: Text(
+                                      'Account creation coming soon!',
+                                    ),
                                   ),
                                 );
                               },

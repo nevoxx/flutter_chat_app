@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/message.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/users_provider.dart';
+import '../users/user_avatar_widget.dart';
 
-class MessageWidget extends StatelessWidget {
+class MessageWidget extends ConsumerWidget {
   final Message message;
   final String currentUserId;
 
@@ -12,9 +16,24 @@ class MessageWidget extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isOwnMessage = message.userId == currentUserId;
-    final user = message.user;
+    final accessToken = ref.watch(accessTokenProvider).value;
+    
+    // Get user from the users list instead of message.user
+    final usersAsync = ref.watch(usersProvider);
+    final user = usersAsync.maybeWhen(
+      data: (users) {
+        try {
+          return users.firstWhere((u) => u.id == message.userId);
+        } catch (e) {
+          // User not found in list, fallback to message.user
+          return message.user;
+        }
+      },
+      orElse: () => message.user,
+    );
+    
     final displayName = user?.displayName ?? 'Unknown User';
 
     return Container(
@@ -22,17 +41,22 @@ class MessageWidget extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: isOwnMessage
-                ? Theme.of(context).colorScheme.primary
-                : Colors.primaries[message.userId.hashCode %
-                      Colors.primaries.length],
-            child: Text(
-              displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
-              style: const TextStyle(fontSize: 12, color: Colors.white),
-            ),
-          ),
+          user != null
+              ? UserAvatar(
+                  user: user,
+                  radius: 16,
+                  showOnlineStatus: false,
+                  currentUserId: currentUserId,
+                  accessToken: accessToken,
+                )
+              : CircleAvatar(
+                  radius: 16,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  child: Text(
+                    displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
+                    style: const TextStyle(fontSize: 12, color: Colors.white),
+                  ),
+                ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
