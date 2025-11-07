@@ -6,10 +6,12 @@ import '../../providers/channels_provider.dart';
 import '../../providers/messages_provider.dart';
 import '../../providers/users_provider.dart';
 import '../../providers/app_state_provider.dart';
-import '../../widgets/messages/message_widget.dart';
 import '../../widgets/messages/message_input_widget.dart';
 import '../../widgets/channels/channel_list_widget.dart';
 import '../../widgets/users/user_list_widget.dart';
+import '../../widgets/chat/messages_area_widget.dart';
+import '../../widgets/partials/channels_drawer_widget.dart';
+import '../../widgets/partials/users_drawer_widget.dart';
 import '../auth/login_page.dart';
 
 class ServerViewPage extends ConsumerStatefulWidget {
@@ -162,7 +164,11 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
             child: Column(
               children: [
                 // Messages Area
-                Expanded(child: _buildMessagesArea()),
+                Expanded(
+                  child: MessagesAreaWidget(
+                    currentUserId: 'me',
+                  ),
+                ),
                 // Message Input
                 MessageInputWidget(onSendMessage: _onSendMessage),
               ],
@@ -186,178 +192,19 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
         ],
       ),
       // Mobile/Tablet Drawers
-      drawer: (!isDesktop) ? _buildChannelsDrawer() : null,
-      endDrawer: (!isDesktop) ? _buildUsersDrawer() : null,
-    );
-  }
-
-  Widget _buildMessagesArea() {
-    final channels = ref.watch(channelsProvider);
-    final selectedChannelId = ref.watch(selectedChannelProvider);
-    final allMessages = ref.watch(messagesProvider);
-    
-    final currentChannel = channels.firstWhere(
-      (ch) => ch.id == selectedChannelId,
-      orElse: () => channels.isNotEmpty ? channels.first : Channel(
-        id: '',
-        name: 'Unknown',
-        sortOrder: 0,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        isDefault: 0,
-      ),
-    );
-
-    final messagesAsync = selectedChannelId != null 
-        ? allMessages[selectedChannelId]
-        : null;
-
-    return Container(
-      color: Theme.of(context).colorScheme.surface,
-      child: Column(
-        children: [
-          // Channel Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(
-                bottom: BorderSide(color: Theme.of(context).dividerColor),
-              ),
-            ),
-            child: Row(
-              children: [
-                const SizedBox(width: 8),
-                Text(
-                  '# ${currentChannel.name}',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                if (MediaQuery.of(context).size.width <= 900) ...[
-                  Builder(
-                    builder: (context) => IconButton(
-                      onPressed: () => Scaffold.of(context).openEndDrawer(),
-                      icon: const Icon(Icons.people),
-                      tooltip: 'Users',
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          // Messages List
-          Expanded(
-            child: messagesAsync == null
-                ? Center(
-                    child: Text(
-                      'Select a channel',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  )
-                : messagesAsync.when(
-                    data: (messages) => messages.isEmpty
-                        ? Center(
-                            child: Text(
-                              'No messages yet',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: messages.length,
-                            itemBuilder: (context, index) {
-                              return MessageWidget(
-                                message: messages[index],
-                                currentUserId: 'me',
-                              );
-                            },
-                          ),
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                    error: (error, stack) => Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 48,
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Error loading messages',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            error.toString(),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              if (selectedChannelId != null) {
-                                ref.read(messagesProvider.notifier)
-                                    .fetchMessagesForChannel(selectedChannelId);
-                              }
-                            },
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChannelsDrawer() {
-    final channels = ref.watch(channelsProvider);
-    final selectedChannelId = ref.watch(selectedChannelProvider);
-
-    return Drawer(
-      child: SafeArea(
-        child: ChannelListWidget(
-          channels: channels,
-          selectedChannelId: selectedChannelId,
-          onChannelSelected: _onChannelSelected,
-          onAddChannel: () {
-            // TODO: Implement add channel
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUsersDrawer() {
-    final usersAsync = ref.watch(usersProvider);
-
-    return Drawer(
-      child: SafeArea(
-        child: usersAsync.when(
-          data: (users) => UserListWidget(
-            users: users,
-            isCollapsed: false,
-            onToggleCollapse: () {},
-            currentUserId: 'me',
-          ),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('Error loading users')),
-        ),
-      ),
+      drawer: (!isDesktop) 
+          ? ChannelsDrawerWidget(
+              onChannelSelected: _onChannelSelected,
+              onAddChannel: () {
+                // TODO: Implement add channel
+              },
+            )
+          : null,
+      endDrawer: (!isDesktop) 
+          ? UsersDrawerWidget(
+              currentUserId: 'me',
+            )
+          : null,
     );
   }
 }
