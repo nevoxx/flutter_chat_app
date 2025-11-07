@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../models/message.dart';
 import '../models/channel.dart';
-import '../models/user.dart';
 import '../providers/data_provider.dart';
 import '../widgets/message_widget.dart';
 import '../widgets/message_input_widget.dart';
@@ -20,84 +18,25 @@ class ServerViewPage extends ConsumerStatefulWidget {
 
 class _ServerViewPageState extends ConsumerState<ServerViewPage> {
   bool _usersSidebarCollapsed = false;
+  String? _lastLoadedChannelId;
 
   @override
   void initState() {
     super.initState();
-    _initializeDummyMessages();
-  }
-
-  void _initializeDummyMessages() {
-    // Generate dummy messages for the first channel
+    // Load messages for the first channel
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final channels = ref.read(channelsProvider);
-      if (channels.isNotEmpty) {
-        final firstChannel = channels.first;
-        final dummyMessages = _generateDummyMessages(firstChannel.id);
-        ref.read(messagesProvider.notifier).setMessagesForChannel(
-          firstChannel.id,
-          dummyMessages,
-        );
+      final selectedChannelId = ref.read(selectedChannelProvider);
+      if (selectedChannelId != null) {
+        _loadMessagesForChannel(selectedChannelId);
       }
     });
   }
 
-  List<Message> _generateDummyMessages(String channelId) {
-    final messageContents = [
-      'Hey everyone! 👋',
-      'How\'s it going?',
-      'I just finished working on that new feature. It was quite challenging but I think it turned out well. The implementation involved several components and required careful consideration of the user experience.',
-      'Nice! 👍',
-      'Can someone help me with the API documentation?',
-      'Sure, what do you need help with?',
-      'I\'m having trouble understanding the authentication flow.',
-      'The authentication uses JWT tokens. You need to include the token in the Authorization header as "Bearer <token>".',
-      'Thanks for the explanation!',
-      'No problem! Let me know if you have any other questions.',
-      'This is a really long message that demonstrates how the chat handles messages with lots of text. It should wrap properly and look good in the interface. I hope this helps show the different message lengths!',
-      'Short reply.',
-      'Another short one.',
-      'I\'m working on the mobile app now. The responsive design is looking good so far.',
-      'Great progress! 🚀',
-      'When will the next release be ready?',
-      'We\'re aiming for next Friday.',
-      'Perfect timing!',
-      'Don\'t forget about the team meeting tomorrow at 10 AM.',
-      'Got it, thanks for the reminder!',
-    ];
-
-    // Get users from provider
-    final usersAsync = ref.read(usersProvider);
-    final users = usersAsync.maybeWhen(
-      data: (data) => data,
-      orElse: () => <User>[],
-    );
-    
-    if (users.isEmpty) {
-      return [];
+  void _loadMessagesForChannel(String channelId) {
+    if (_lastLoadedChannelId != channelId) {
+      _lastLoadedChannelId = channelId;
+      ref.read(messagesProvider.notifier).fetchMessagesForChannel(channelId);
     }
-
-    return List.generate(20, (index) {
-      final user = users[index % users.length];
-
-      return Message(
-        id: 'msg_$index',
-        content: messageContents[index % messageContents.length],
-        channelId: channelId,
-        userId: user.id,
-        createdAt: DateTime.now().subtract(Duration(minutes: 20 - index)),
-        updatedAt: DateTime.now().subtract(Duration(minutes: 20 - index)),
-        channel: Channel(
-          id: channelId,
-          name: '',
-          sortOrder: 0,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          isDefault: 0,
-        ),
-        attachments: [],
-      );
-    });
   }
 
   Future<void> _logout(BuildContext context) async {
@@ -135,6 +74,7 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
 
   void _onChannelSelected(String channelId) {
     ref.read(selectedChannelProvider.notifier).state = channelId;
+    _loadMessagesForChannel(channelId);
   }
 
   void _onSendMessage(String content) {
@@ -265,9 +205,9 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
       ),
     );
 
-    final messages = selectedChannelId != null 
-        ? allMessages[selectedChannelId] ?? []
-        : [];
+    final messagesAsync = selectedChannelId != null 
+        ? allMessages[selectedChannelId]
+        : null;
 
     return Container(
       color: Theme.of(context).colorScheme.surface,
@@ -306,24 +246,74 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
           ),
           // Messages List
           Expanded(
-            child: messages.isEmpty
+            child: messagesAsync == null
                 ? Center(
                     child: Text(
-                      'No messages yet',
+                      'Select a channel',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      return MessageWidget(
-                        message: messages[index],
-                        currentUserId: 'me',
-                      );
-                    },
+                : messagesAsync.when(
+                    data: (messages) => messages.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No messages yet',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: messages.length,
+                            itemBuilder: (context, index) {
+                              return MessageWidget(
+                                message: messages[index],
+                                currentUserId: 'me',
+                              );
+                            },
+                          ),
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                    error: (error, stack) => Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Error loading messages',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            error.toString(),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              if (selectedChannelId != null) {
+                                ref.read(messagesProvider.notifier)
+                                    .fetchMessagesForChannel(selectedChannelId);
+                              }
+                            },
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
           ),
         ],

@@ -14,6 +14,8 @@ class MessageWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOwnMessage = message.userId == currentUserId;
+    final user = message.user;
+    final displayName = user?.displayName ?? 'Unknown User';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -27,7 +29,7 @@ class MessageWidget extends StatelessWidget {
                 : Colors.primaries[message.userId.hashCode %
                       Colors.primaries.length],
             child: Text(
-              isOwnMessage ? 'Me' : message.userId[0].toUpperCase(),
+              displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
               style: const TextStyle(fontSize: 12, color: Colors.white),
             ),
           ),
@@ -39,7 +41,7 @@ class MessageWidget extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      isOwnMessage ? 'You' : 'User ${message.userId}',
+                      isOwnMessage ? 'You' : displayName,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),

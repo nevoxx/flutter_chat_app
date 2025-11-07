@@ -1,5 +1,6 @@
 import 'channel.dart';
 import 'attachment.dart';
+import 'user.dart';
 
 class Message {
   final String content;
@@ -9,7 +10,9 @@ class Message {
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
-  final Channel channel;
+  final String? deletedByUserId;
+  final Channel? channel;
+  final User? user;
   final List<Attachment> attachments;
 
   const Message({
@@ -20,7 +23,9 @@ class Message {
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
-    required this.channel,
+    this.deletedByUserId,
+    this.channel,
+    this.user,
     required this.attachments,
   });
 
@@ -35,7 +40,13 @@ class Message {
       deletedAt: json['deletedAt'] != null
           ? DateTime.parse(json['deletedAt'] as String)
           : null,
-      channel: Channel.fromJson(json['channel'] as Map<String, dynamic>),
+      deletedByUserId: json['deletedByUserId'] as String?,
+      channel: json['channel'] != null
+          ? Channel.fromJson(json['channel'] as Map<String, dynamic>)
+          : null,
+      user: json['user'] != null
+          ? User.fromJson(json['user'] as Map<String, dynamic>)
+          : null,
       attachments:
           (json['attachments'] as List<dynamic>?)
               ?.map((e) => Attachment.fromJson(e as Map<String, dynamic>))
@@ -53,8 +64,38 @@ class Message {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'deletedAt': deletedAt?.toIso8601String(),
-      'channel': channel.toJson(),
+      'deletedByUserId': deletedByUserId,
+      'channel': channel?.toJson(),
+      'user': user?.toJson(),
       'attachments': attachments.map((e) => e.toJson()).toList(),
     };
+  }
+
+  Message copyWith({
+    String? content,
+    String? channelId,
+    String? userId,
+    String? id,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    DateTime? deletedAt,
+    String? deletedByUserId,
+    Channel? channel,
+    User? user,
+    List<Attachment>? attachments,
+  }) {
+    return Message(
+      content: content ?? this.content,
+      channelId: channelId ?? this.channelId,
+      userId: userId ?? this.userId,
+      id: id ?? this.id,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      deletedByUserId: deletedByUserId ?? this.deletedByUserId,
+      channel: channel ?? this.channel,
+      user: user ?? this.user,
+      attachments: attachments ?? this.attachments,
+    );
   }
 }
