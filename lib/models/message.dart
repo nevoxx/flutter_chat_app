@@ -3,7 +3,7 @@ import 'attachment.dart';
 import 'user.dart';
 
 class Message {
-  final String content;
+  final String? content;
   final String channelId;
   final String userId;
   final String id;
@@ -16,7 +16,7 @@ class Message {
   final List<Attachment> attachments;
 
   const Message({
-    required this.content,
+    this.content,
     required this.channelId,
     required this.userId,
     required this.id,
@@ -31,7 +31,7 @@ class Message {
 
   factory Message.fromJson(Map<String, dynamic> json) {
     return Message(
-      content: json['content'] as String,
+      content: json['content'] as String?,
       channelId: json['channelId'] as String,
       userId: json['userId'] as String,
       id: json['id'] as String,

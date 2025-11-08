@@ -19,7 +19,7 @@ class MessageWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isOwnMessage = message.userId == currentUserId;
     final accessToken = ref.watch(accessTokenProvider).value;
-    
+
     // Get user from the users list instead of message.user
     final usersAsync = ref.watch(usersProvider);
     final user = usersAsync.maybeWhen(
@@ -33,7 +33,7 @@ class MessageWidget extends ConsumerWidget {
       },
       orElse: () => message.user,
     );
-    
+
     final displayName = user?.displayName ?? 'Unknown User';
 
     return Container(
@@ -80,10 +80,51 @@ class MessageWidget extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  message.content,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+                // Display message content if it exists
+                if (message.content != null && message.content!.isNotEmpty)
+                  Text(
+                    message.content!,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                // Display attachments if they exist
+                if (message.attachments.isNotEmpty) ...[
+                  if (message.content != null && message.content!.isNotEmpty)
+                    const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceVariant.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outline.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.attach_file,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${message.attachments.length} attachment${message.attachments.length > 1 ? 's' : ''}',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
