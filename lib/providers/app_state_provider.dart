@@ -31,12 +31,28 @@ class AppStateController extends StateNotifier<AppState> {
   final Ref ref;
 
   AppStateController(this.ref) : super(const AppState()) {
-    // Auto-select first channel when channels are loaded
+    // Check for already loaded channels
+    final initialChannels = ref.read(channelsProvider);
+    _selectDefaultChannel(initialChannels);
+    
+    // Listen for future channel changes
     ref.listen(channelsProvider, (previous, next) {
-      if (next.isNotEmpty && state.selectedChannelId == null) {
-        state = state.copyWith(selectedChannelId: next.first.id);
-      }
+      _selectDefaultChannel(next);
     });
+  }
+  
+  void _selectDefaultChannel(List channels) {
+    if (channels.isNotEmpty && state.selectedChannelId == null) {
+      // Try to find the first channel with isDefault == 1
+      try {
+        final defaultChannel = channels.firstWhere((channel) => channel.isDefault == 1);
+        state = state.copyWith(selectedChannelId: defaultChannel.id);
+      }
+      // No default channel found, use the first one
+      catch (e) {
+        state = state.copyWith(selectedChannelId: channels.first.id);
+      }
+    }
   }
 
   void setSelectedChannel(String? channelId) {

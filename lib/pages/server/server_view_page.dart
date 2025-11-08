@@ -30,7 +30,6 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
   @override
   void initState() {
     super.initState();
-    // Load messages for the first channel
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final selectedChannelId = ref.read(selectedChannelProvider);
       if (selectedChannelId != null) {
@@ -106,6 +105,13 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
     final channels = ref.watch(channelsProvider);
     final usersAsync = ref.watch(usersProvider);
     final selectedChannelId = ref.watch(selectedChannelProvider);
+    
+    // Listen for channel changes outside of build
+    ref.listen<String?>(selectedChannelProvider, (previous, next) {
+      if (next != null && next != previous) {
+        _loadMessagesForChannel(next);
+      }
+    });
 
     // Get current channel name
     final currentChannel = channels.firstWhere(

@@ -4,7 +4,7 @@ import '../../providers/messages_provider.dart';
 import '../../providers/app_state_provider.dart';
 import '../messages/message_widget.dart';
 
-class MessagesAreaWidget extends ConsumerWidget {
+class MessagesAreaWidget extends ConsumerStatefulWidget {
   final String? currentUserId;
 
   const MessagesAreaWidget({
@@ -13,9 +13,39 @@ class MessagesAreaWidget extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MessagesAreaWidget> createState() => _MessagesAreaWidgetState();
+}
+
+class _MessagesAreaWidgetState extends ConsumerState<MessagesAreaWidget> {
+  final ScrollController _scrollController = ScrollController();
+  String? _currentChannelId;
+  bool _needsScroll = false;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottomImmediate() {
+    if (_scrollController.hasClients && mounted) {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      if (maxScroll > 0) {
+        _scrollController.jumpTo(maxScroll);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final selectedChannelId = ref.watch(selectedChannelProvider);
     final allMessages = ref.watch(messagesProvider);
+
+    // Detect channel change
+    if (selectedChannelId != _currentChannelId) {
+      _currentChannelId = selectedChannelId;
+      _needsScroll = true;
+    }
 
     final messagesAsync = selectedChannelId != null 
         ? allMessages[selectedChannelId]
@@ -37,25 +67,38 @@ class MessagesAreaWidget extends ConsumerWidget {
                     ),
                   )
                 : messagesAsync.when(
-                    data: (messages) => messages.isEmpty
-                        ? Center(
-                            child: Text(
-                              'No messages yet',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
+                    data: (messages) {
+                      if (messages.isEmpty) {
+                        return Center(
+                          child: Text(
+                            'No messages yet',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: messages.length,
-                            itemBuilder: (context, index) {
-                              return MessageWidget(
-                                message: messages[index],
-                                currentUserId: currentUserId ?? 'me',
-                              );
-                            },
                           ),
+                        );
+                      }
+                      
+                      // Scroll to bottom only when flag is set
+                      if (_needsScroll) {
+                        _needsScroll = false;
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          _scrollToBottomImmediate();
+                        });
+                      }
+                      
+                      return ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(16),
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          return MessageWidget(
+                            message: messages[index],
+                            currentUserId: widget.currentUserId ?? 'me',
+                          );
+                        },
+                      );
+                    },
                     loading: () => const Center(
                       child: CircularProgressIndicator(),
                     ),
