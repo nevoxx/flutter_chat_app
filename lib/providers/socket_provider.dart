@@ -1,7 +1,7 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:flutter/foundation.dart';
+import '../services/storage_service.dart';
 
 enum SocketStatus { disconnected, connecting, connected }
 
@@ -14,7 +14,6 @@ final socketProvider = StateNotifierProvider<SocketController, SocketStatus>((
 class SocketController extends StateNotifier<SocketStatus> {
   final Ref ref;
   IO.Socket? _socket;
-  final _storage = FlutterSecureStorage();
 
   SocketController(this.ref) : super(SocketStatus.disconnected) {
     _init();
@@ -23,15 +22,17 @@ class SocketController extends StateNotifier<SocketStatus> {
   Future<void> _init() async {
     state = SocketStatus.connecting;
 
-    final token = await _storage.read(key: 'accessToken');
+    final storage = ref.read(storageServiceProvider);
+    final token = await storage.getAccessToken();
+    final serverUrl = await storage.getServerUrl();
 
-    if (token == null) {
+    if (token == null || serverUrl == null) {
       state = SocketStatus.disconnected;
       return;
     }
 
     _socket = IO.io(
-      'https://api.blubber.me',
+      serverUrl,
       IO.OptionBuilder()
           .setPath('/server')
           .setTransports(['websocket'])

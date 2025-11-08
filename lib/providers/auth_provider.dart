@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import '../main.dart';
 import '../pages/loading/loading_page.dart';
+import '../services/storage_service.dart';
 
 final authProvider = StateNotifierProvider<AuthController, AsyncValue<void>>((
   ref,
@@ -14,29 +14,36 @@ final authProvider = StateNotifierProvider<AuthController, AsyncValue<void>>((
 
 // Provider to get the access token
 final accessTokenProvider = FutureProvider<String?>((ref) async {
-  const storage = FlutterSecureStorage();
-  return await storage.read(key: 'accessToken');
+  final storage = ref.watch(storageServiceProvider);
+  return await storage.getAccessToken();
 });
 
 class AuthController extends StateNotifier<AsyncValue<void>> {
   AuthController(this.ref) : super(const AsyncValue.data(null));
 
   final Ref ref;
-  final _storage = const FlutterSecureStorage();
 
-  Future<void> login(String username, String password) async {
+  Future<void> login(String username, String password, String serverUrl) async {
     state = const AsyncValue.loading();
     try {
+      final storage = ref.read(storageServiceProvider);
+      
+      // Save server URL first
+      await storage.setServerUrl(serverUrl);
+      
+      // Get the formatted server URL
+      final formattedUrl = await storage.getServerUrl();
+      
       final res = await http.post(
-        Uri.parse('https://api.blubber.me/auth/token'),
+        Uri.parse('$formattedUrl/auth/token'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'username': username, 'password': password}),
       );
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        await _storage.write(key: 'accessToken', value: data['accessToken']);
-        await _storage.write(key: 'refreshToken', value: data['refreshToken']);
+        await storage.setAccessToken(data['accessToken']);
+        await storage.setRefreshToken(data['refreshToken']);
 
         state = const AsyncValue.data(null);
 
@@ -49,5 +56,11 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
+  }
+
+  Future<void> logout() async {
+    final storage = ref.read(storageServiceProvider);
+    await storage.clearAll();
+    state = const AsyncValue.data(null);
   }
 }

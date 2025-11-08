@@ -2,11 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user.dart';
 import '../services/api_service.dart';
 
-// API Service Provider
-final apiServiceProvider = Provider<ApiService>((ref) {
-  return ApiService();
-});
-
 // Users Provider
 final usersProvider = StateNotifierProvider<UsersController, AsyncValue<List<User>>>((ref) {
   return UsersController(ref);

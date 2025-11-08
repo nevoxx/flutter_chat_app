@@ -27,7 +27,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (_formKey.currentState?.validate() ?? false) {
       final username = _usernameController.text;
       final password = _passwordController.text;
-      ref.read(authProvider.notifier).login(username, password);
+      final serverUrl = _hostnameController.text;
+      ref.read(authProvider.notifier).login(username, password, serverUrl);
     }
   }
 

@@ -1,16 +1,32 @@
 import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import '../models/server_info.dart';
 import '../models/user.dart';
 import '../models/message.dart';
+import './storage_service.dart';
+
+// Provider for ApiService
+final apiServiceProvider = Provider<ApiService>((ref) {
+  final storage = ref.watch(storageServiceProvider);
+  return ApiService(storage);
+});
 
 class ApiService {
-  static const String baseUrl = 'https://api.blubber.me';
-  final _storage = const FlutterSecureStorage();
+  final StorageService _storage;
+
+  ApiService(this._storage);
+
+  Future<String> _getBaseUrl() async {
+    final url = await _storage.getServerUrl();
+    if (url == null) {
+      throw Exception('No server URL configured');
+    }
+    return url;
+  }
 
   Future<String?> _getToken() async {
-    return await _storage.read(key: 'accessToken');
+    return await _storage.getAccessToken();
   }
 
   Map<String, String> _getHeaders(String? token) {
@@ -26,6 +42,7 @@ class ApiService {
   }
 
   Future<ServerInfo> fetchServerInfo() async {
+    final baseUrl = await _getBaseUrl();
     final token = await _getToken();
     
     if (token == null) {
@@ -48,6 +65,7 @@ class ApiService {
   }
 
   Future<List<User>> fetchUsers() async {
+    final baseUrl = await _getBaseUrl();
     final token = await _getToken();
     
     if (token == null) {
@@ -72,6 +90,7 @@ class ApiService {
   }
 
   Future<List<Message>> fetchMessages(String channelId) async {
+    final baseUrl = await _getBaseUrl();
     final token = await _getToken();
     
     if (token == null) {

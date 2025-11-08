@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../models/channel.dart';
 import '../../providers/channels_provider.dart';
 import '../../providers/messages_provider.dart';
 import '../../providers/users_provider.dart';
 import '../../providers/app_state_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/socket_provider.dart';
 import '../../widgets/messages/message_input_widget.dart';
 import '../../widgets/channels/channel_list_widget.dart';
 import '../../widgets/users/user_list_widget.dart';
@@ -65,9 +66,11 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
     );
 
     if (shouldLogout == true) {
-      const storage = FlutterSecureStorage();
-      await storage.delete(key: 'accessToken');
-      await storage.delete(key: 'refreshToken');
+      // Disconnect socket
+      ref.read(socketProvider.notifier).disconnect();
+      
+      // Clear all stored data
+      await ref.read(authProvider.notifier).logout();
 
       if (context.mounted) {
         Navigator.of(context).pushAndRemoveUntil(

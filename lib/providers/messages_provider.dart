@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/message.dart';
-import 'users_provider.dart';
+import '../services/api_service.dart';
 
 // Messages Provider (per channel with loading states)
 final messagesProvider = StateNotifierProvider<MessagesController, Map<String, AsyncValue<List<Message>>>>((ref) {

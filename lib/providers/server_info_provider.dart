@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/server_info.dart';
+import '../services/api_service.dart';
 import 'channels_provider.dart';
-import 'users_provider.dart';
 
 // Server Info Provider
 final serverInfoProvider = StateNotifierProvider<ServerInfoController, AsyncValue<ServerInfo?>>((ref) {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/socket_provider.dart';
 import '../../providers/server_info_provider.dart';
 import '../../providers/users_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../server/server_view_page.dart';
 import '../auth/login_page.dart';
 
@@ -79,10 +80,19 @@ class _LoadingPageState extends ConsumerState<LoadingPage> {
     _loadData();
   }
 
-  void _logout() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoginPage()),
-    );
+  Future<void> _logout() async {
+    // Disconnect socket
+    ref.read(socketProvider.notifier).disconnect();
+    
+    // Clear all stored data
+    await ref.read(authProvider.notifier).logout();
+    
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (route) => false,
+      );
+    }
   }
 
   @override
