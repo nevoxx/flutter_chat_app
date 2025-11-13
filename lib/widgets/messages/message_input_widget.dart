@@ -30,7 +30,6 @@ class _MessageInputWidgetState extends State<MessageInputWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border(
@@ -40,35 +39,41 @@ class _MessageInputWidgetState extends State<MessageInputWidget> {
           ),
         ),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Expanded(
-            child: MessageEditorWidget(
-              controller: _controller,
-              onSubmit: _sendMessage,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.only(bottom: 1),
-            child: IconButton(
-              onPressed: _sendMessage,
-              icon: const Icon(Icons.send_rounded, size: 20),
-              tooltip: 'Send Message',
-              padding: const EdgeInsets.all(12),
-              constraints: const BoxConstraints(),
-              style: IconButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+      child: SafeArea(
+        top: false,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: MessageEditorWidget(
+                  controller: _controller,
+                  onSubmit: _sendMessage,
                 ),
               ),
-            ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.only(bottom: 1),
+                child: IconButton(
+                  onPressed: _sendMessage,
+                  icon: const Icon(Icons.send_rounded, size: 20),
+                  tooltip: 'Send Message',
+                  padding: const EdgeInsets.all(12),
+                  constraints: const BoxConstraints(),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

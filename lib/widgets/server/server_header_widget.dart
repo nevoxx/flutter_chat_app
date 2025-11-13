@@ -37,28 +37,29 @@ class ServerHeaderWidget extends ConsumerWidget implements PreferredSizeWidget {
           ),
         ),
         child: SafeArea(
+          bottom: false,
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Server name section (desktop only)
               if (isDesktop) ...[
                 Container(
-                  width: 250,
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          serverName,
-                          style: Theme.of(context).textTheme.titleMedium,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                width: 250,
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        serverName,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.wifi, size: 18, color: Colors.green),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.wifi, size: 18, color: Colors.green),
+                  ],
+                ),
                 ),
                 // Vertical divider
                 Container(
@@ -69,55 +70,55 @@ class ServerHeaderWidget extends ConsumerWidget implements PreferredSizeWidget {
               // Rest of AppBar with channel name and actions
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  alignment: Alignment.center,
-                  child: Row(
-                    children: [
-                      // Menu button for mobile
-                      if (!isDesktop)
-                        Builder(
-                          builder: (context) => IconButton(
-                            onPressed: () => Scaffold.of(context).openDrawer(),
-                            icon: const Icon(Icons.menu),
-                            tooltip: 'Show Channels',
-                          ),
-                        ),
-                      const Icon(Icons.tag, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          currentChannel.name,
-                          style: Theme.of(context).textTheme.titleLarge,
-                          overflow: TextOverflow.ellipsis,
+                padding: EdgeInsets.symmetric(horizontal: isDesktop ? 16 : 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Menu button for mobile
+                    if (!isDesktop)
+                      Builder(
+                        builder: (context) => IconButton(
+                          onPressed: () => Scaffold.of(context).openDrawer(),
+                          icon: const Icon(Icons.menu),
+                          tooltip: 'Show Channels',
                         ),
                       ),
-                      // Users button for mobile
-                      if (!isDesktop)
-                        Builder(
-                          builder: (context) => IconButton(
-                            onPressed: () =>
-                                Scaffold.of(context).openEndDrawer(),
-                            icon: const Icon(Icons.people),
-                            tooltip: 'Show Members',
-                          ),
-                        ),
-                      // Theme toggle button
-                      const ThemeToggleButton(),
-                      // Logout button
-                      IconButton(
-                        onPressed: onLogout,
-                        icon: const Icon(Icons.logout),
-                        tooltip: 'Logout',
+                    if (!isDesktop) const SizedBox(width: 4),
+                    const Icon(Icons.tag, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        currentChannel.name,
+                        style: Theme.of(context).textTheme.titleLarge,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                  ),
+                    ),
+                    // Users button for mobile
+                    if (!isDesktop)
+                      Builder(
+                        builder: (context) => IconButton(
+                          onPressed: () => Scaffold.of(context).openEndDrawer(),
+                          icon: const Icon(Icons.people),
+                          tooltip: 'Show Members',
+                        ),
+                      ),
+                    // Theme toggle button
+                    const ThemeToggleButton(),
+                    // Logout button
+                    IconButton(
+                      onPressed: onLogout,
+                      icon: const Icon(Icons.logout),
+                      tooltip: 'Logout',
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
+        ),
         ),
       ),
     );
   }
 }
-

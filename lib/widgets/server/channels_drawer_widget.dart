@@ -25,12 +25,13 @@ class ChannelsDrawerWidget extends ConsumerWidget {
           channels: channels,
           selectedChannelId: selectedChannelId,
           onChannelSelected: onChannelSelected,
-          onAddChannel: onAddChannel ?? () {
-            // Default empty callback
-          },
+          onAddChannel:
+              onAddChannel ??
+              () {
+                // Default empty callback
+              },
         ),
       ),
     );
   }
 }
-
