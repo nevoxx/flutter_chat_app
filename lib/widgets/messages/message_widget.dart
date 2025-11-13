@@ -82,7 +82,7 @@ class MessageWidget extends ConsumerWidget {
                 const SizedBox(height: 4),
                 // Display message content if it exists
                 if (message.content != null && message.content!.isNotEmpty)
-                  Text(
+                  SelectableText(
                     message.content!,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),

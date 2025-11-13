@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'message_editor_widget.dart';
 
 class MessageInputWidget extends StatefulWidget {
   final Function(String) onSendMessage;
@@ -43,28 +44,9 @@ class _MessageInputWidgetState extends State<MessageInputWidget> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Expanded(
-            child: TextField(
+            child: MessageEditorWidget(
               controller: _controller,
-              decoration: InputDecoration(
-                hintText: 'Type a message...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                isDense: true,
-              ),
-              maxLines: 5,
-              minLines: 1,
-              textInputAction: TextInputAction.newline,
-              onSubmitted: (_) => _sendMessage(),
+              onSubmit: _sendMessage,
             ),
           ),
           const SizedBox(width: 8),

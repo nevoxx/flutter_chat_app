@@ -7,14 +7,13 @@ import '../../providers/users_provider.dart';
 import '../../providers/app_state_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/socket_provider.dart';
-import '../../providers/server_info_provider.dart';
 import '../../widgets/messages/message_input_widget.dart';
 import '../../widgets/channels/channel_list_widget.dart';
 import '../../widgets/users/user_list_widget.dart';
 import '../../widgets/chat/messages_area_widget.dart';
-import '../../widgets/partials/channels_drawer_widget.dart';
-import '../../widgets/partials/users_drawer_widget.dart';
-import '../../widgets/ui/theme_toggle_button.dart';
+import '../../widgets/server/channels_drawer_widget.dart';
+import '../../widgets/server/users_drawer_widget.dart';
+import '../../widgets/server/server_header_widget.dart';
 import '../auth/login_page.dart';
 
 class ServerViewPage extends ConsumerStatefulWidget {
@@ -106,7 +105,6 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
     final channels = ref.watch(channelsProvider);
     final usersAsync = ref.watch(usersProvider);
     final selectedChannelId = ref.watch(selectedChannelProvider);
-    final serverInfoAsync = ref.watch(serverInfoProvider);
 
     // Listen for channel changes outside of build
     ref.listen<String?>(selectedChannelProvider, (previous, next) {
@@ -130,87 +128,11 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
             ),
     );
 
-    // Get server name
-    final serverName = serverInfoAsync.valueOrNull?.name ?? 'Server';
-
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: kToolbarHeight,
-        titleSpacing: 0,
-        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-        surfaceTintColor: Colors.transparent,
-        flexibleSpace: SafeArea(
-          child: Row(
-            children: [
-              // Server name section
-              Container(
-                width: 250,
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        serverName,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.wifi, size: 18, color: Colors.green),
-                  ],
-                ),
-              ),
-              // Vertical divider
-              Container(
-                width: 1,
-                color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
-              ),
-              // Rest of AppBar with channel name and actions
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.tag, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        currentChannel.name,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const Spacer(),
-                      // Users button (mobile/tablet only)
-                      if (!isDesktop)
-                        Builder(
-                          builder: (context) => IconButton(
-                            onPressed: () =>
-                                Scaffold.of(context).openEndDrawer(),
-                            icon: const Icon(Icons.people),
-                            tooltip: 'Show Members',
-                          ),
-                        ),
-                      // Theme toggle button
-                      const ThemeToggleButton(),
-                      // Logout button
-                      IconButton(
-                        onPressed: () => _logout(context),
-                        icon: const Icon(Icons.logout),
-                        tooltip: 'Logout',
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
-            height: 1,
-          ),
-        ),
+      appBar: ServerHeaderWidget(
+        currentChannel: currentChannel,
+        isDesktop: isDesktop,
+        onLogout: () => _logout(context),
       ),
       body: Row(
         children: [
