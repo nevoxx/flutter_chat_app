@@ -40,22 +40,8 @@ class _MessageInputWidgetState extends State<MessageInputWidget> {
         ),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          IconButton(
-            onPressed: () {
-              // TODO: Implement file attachment
-            },
-            icon: const Icon(Icons.add_circle_outline),
-            tooltip: 'Attach file',
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            style: IconButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-          ),
-          const SizedBox(width: 8),
           Expanded(
             child: TextField(
               controller: _controller,
@@ -66,37 +52,38 @@ class _MessageInputWidgetState extends State<MessageInputWidget> {
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                fillColor: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 12,
+                  vertical: 14,
                 ),
                 isDense: true,
               ),
-              maxLines: null,
-              maxLength: 2000,
-              buildCounter: (context, {required currentLength, required isFocused, maxLength}) {
-                if (!isFocused || currentLength == 0) return null;
-                return Text(
-                  '$currentLength/$maxLength',
-                  style: Theme.of(context).textTheme.bodySmall,
-                );
-              },
+              maxLines: 5,
+              minLines: 1,
               textInputAction: TextInputAction.newline,
               onSubmitted: (_) => _sendMessage(),
             ),
           ),
           const SizedBox(width: 8),
-          IconButton(
-            onPressed: _sendMessage,
-            icon: const Icon(Icons.send_rounded),
-            tooltip: 'Send Message',
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            style: IconButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          Container(
+            padding: const EdgeInsets.only(bottom: 1),
+            child: IconButton(
+              onPressed: _sendMessage,
+              icon: const Icon(Icons.send_rounded, size: 20),
+              tooltip: 'Send Message',
+              padding: const EdgeInsets.all(12),
+              constraints: const BoxConstraints(),
+              style: IconButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
             ),
           ),
         ],

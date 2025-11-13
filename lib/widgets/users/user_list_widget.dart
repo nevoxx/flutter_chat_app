@@ -51,7 +51,9 @@ class _UserListWidgetState extends ConsumerState<UserListWidget> {
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: widget.isCollapsed 
+                ? const EdgeInsets.symmetric(horizontal: 6, vertical: 8)
+                : const EdgeInsets.all(16),
             child: Row(
               children: [
                 if (!widget.isCollapsed) ...[

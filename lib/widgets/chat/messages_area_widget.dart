@@ -7,10 +7,7 @@ import '../messages/message_widget.dart';
 class MessagesAreaWidget extends ConsumerStatefulWidget {
   final String? currentUserId;
 
-  const MessagesAreaWidget({
-    super.key,
-    this.currentUserId,
-  });
+  const MessagesAreaWidget({super.key, this.currentUserId});
 
   @override
   ConsumerState<MessagesAreaWidget> createState() => _MessagesAreaWidgetState();
@@ -47,7 +44,7 @@ class _MessagesAreaWidgetState extends ConsumerState<MessagesAreaWidget> {
       _needsScroll = true;
     }
 
-    final messagesAsync = selectedChannelId != null 
+    final messagesAsync = selectedChannelId != null
         ? allMessages[selectedChannelId]
         : null;
 
@@ -73,12 +70,14 @@ class _MessagesAreaWidgetState extends ConsumerState<MessagesAreaWidget> {
                           child: Text(
                             'No messages yet',
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         );
                       }
-                      
+
                       // Scroll to bottom only when flag is set
                       if (_needsScroll) {
                         _needsScroll = false;
@@ -86,10 +85,13 @@ class _MessagesAreaWidgetState extends ConsumerState<MessagesAreaWidget> {
                           _scrollToBottomImmediate();
                         });
                       }
-                      
+
                       return ListView.builder(
                         controller: _scrollController,
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
                         itemCount: messages.length,
                         itemBuilder: (context, index) {
                           return MessageWidget(
@@ -99,9 +101,8 @@ class _MessagesAreaWidgetState extends ConsumerState<MessagesAreaWidget> {
                         },
                       );
                     },
-                    loading: () => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (error, stack) => Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -121,14 +122,17 @@ class _MessagesAreaWidgetState extends ConsumerState<MessagesAreaWidget> {
                             error.toString(),
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
                             onPressed: () {
                               if (selectedChannelId != null) {
-                                ref.read(messagesProvider.notifier)
+                                ref
+                                    .read(messagesProvider.notifier)
                                     .fetchMessagesForChannel(selectedChannelId);
                               }
                             },
@@ -145,4 +149,3 @@ class _MessagesAreaWidgetState extends ConsumerState<MessagesAreaWidget> {
     );
   }
 }
-
