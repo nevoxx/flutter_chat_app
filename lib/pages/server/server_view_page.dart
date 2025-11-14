@@ -7,6 +7,7 @@ import '../../providers/users_provider.dart';
 import '../../providers/app_state_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/socket_provider.dart';
+import '../../services/socket_service.dart';
 import '../../widgets/messages/message_input_widget.dart';
 import '../../widgets/channels/channel_list_widget.dart';
 import '../../widgets/users/user_list_widget.dart';
@@ -86,8 +87,14 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
   }
 
   void _onSendMessage(String content) {
-    // TODO: Implement actual message sending
-    print('Sending message: $content');
+    final selectedChannelId = ref.read(selectedChannelProvider);
+    if (selectedChannelId == null) return;
+
+    final socketService = ref.read(socketServiceProvider);
+    socketService.sendChatMessage(
+      channelId: selectedChannelId,
+      content: content,
+    );
   }
 
   void _onToggleUsersSidebar() {

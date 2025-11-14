@@ -44,7 +44,7 @@ class _MessageInputWidgetState extends State<MessageInputWidget> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: MessageEditorWidget(
@@ -53,21 +53,19 @@ class _MessageInputWidgetState extends State<MessageInputWidget> {
                 ),
               ),
               const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.only(bottom: 1),
+              SizedBox(
+                height: 40, // Matches TextField height with isDense: true and contentPadding vertical: 14
+                width: 40,
                 child: IconButton(
                   onPressed: _sendMessage,
-                  icon: const Icon(Icons.send_rounded, size: 20),
+                  icon: const Icon(Icons.send_rounded, size: 18),
                   tooltip: 'Send Message',
-                  padding: const EdgeInsets.all(12),
-                  constraints: const BoxConstraints(),
+                  padding: EdgeInsets.zero,
                   style: IconButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    shape: const CircleBorder(),
                   ),
                 ),
               ),

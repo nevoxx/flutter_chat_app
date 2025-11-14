@@ -40,12 +40,20 @@ class MessagesController extends StateNotifier<Map<String, AsyncValue<List<Messa
 
   void addMessage(Message message) {
     final channelMessagesAsync = state[message.channelId];
-    channelMessagesAsync?.whenData((messages) {
+    if (channelMessagesAsync != null) {
+      channelMessagesAsync.whenData((messages) {
+        state = {
+          ...state,
+          message.channelId: AsyncValue.data([...messages, message]),
+        };
+      });
+    } else {
+      // Channel doesn't exist yet, create it with the new message
       state = {
         ...state,
-        message.channelId: AsyncValue.data([...messages, message]),
+        message.channelId: AsyncValue.data([message]),
       };
-    });
+    }
   }
 
   void updateMessage(Message message) {
