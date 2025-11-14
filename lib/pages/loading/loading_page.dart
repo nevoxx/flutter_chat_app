@@ -4,6 +4,7 @@ import '../../providers/socket_provider.dart';
 import '../../providers/server_info_provider.dart';
 import '../../providers/users_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/socket_service.dart';
 import '../server/server_view_page.dart';
 import '../auth/login_page.dart';
 
@@ -22,14 +23,13 @@ class _LoadingPageState extends ConsumerState<LoadingPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAndLoadData();
-    });
+    // Initialize socket service as soon as possible to set up listeners
+    ref.read(socketServiceProvider);
   }
 
   Future<void> _checkAndLoadData() async {
     final socketStatus = ref.read(socketProvider);
-    
+
     if (socketStatus == SocketStatus.connected && !_isLoadingData) {
       await _loadData();
     }
@@ -45,22 +45,22 @@ class _LoadingPageState extends ConsumerState<LoadingPage> {
     try {
       // Fetch server info (which includes channels)
       await ref.read(serverInfoProvider.notifier).fetchServerInfo();
-      
+
       // Fetch users
       await ref.read(usersProvider.notifier).fetchUsers();
-      
+
       // Check if data was loaded successfully
       final serverInfo = ref.read(serverInfoProvider);
       final users = ref.read(usersProvider);
-      
+
       if (serverInfo.hasError) {
         throw serverInfo.error ?? Exception('Failed to load server info');
       }
-      
+
       if (users.hasError) {
         throw users.error ?? Exception('Failed to load users');
       }
-      
+
       // Navigate to server view
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -83,10 +83,10 @@ class _LoadingPageState extends ConsumerState<LoadingPage> {
   Future<void> _logout() async {
     // Disconnect socket
     ref.read(socketProvider.notifier).disconnect();
-    
+
     // Clear all stored data
     await ref.read(authProvider.notifier).logout();
-    
+
     if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const LoginPage()),
@@ -99,21 +99,17 @@ class _LoadingPageState extends ConsumerState<LoadingPage> {
   Widget build(BuildContext context) {
     final socketStatus = ref.watch(socketProvider);
 
-    // If socket gets connected and we're not loading yet, start loading
-    if (socketStatus == SocketStatus.connected && !_isLoadingData && !_hasError) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Listen for socket connection and load data when connected
+    ref.listen<SocketStatus>(socketProvider, (previous, next) {
+      if (next == SocketStatus.connected && !_isLoadingData && !_hasError) {
         _checkAndLoadData();
-      });
-    }
+      }
+    });
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Connecting'),
-      ),
+      appBar: AppBar(title: const Text('Connecting')),
       body: Center(
-        child: _hasError
-            ? _buildErrorView()
-            : _buildLoadingView(socketStatus),
+        child: _hasError ? _buildErrorView() : _buildLoadingView(socketStatus),
       ),
     );
   }
@@ -121,7 +117,7 @@ class _LoadingPageState extends ConsumerState<LoadingPage> {
   Widget _buildLoadingView(SocketStatus socketStatus) {
     String statusText;
     String descriptionText;
-    
+
     switch (socketStatus) {
       case SocketStatus.disconnected:
         statusText = "Disconnected";
@@ -132,24 +128,19 @@ class _LoadingPageState extends ConsumerState<LoadingPage> {
         descriptionText = "Please wait while we establish your connection";
         break;
       case SocketStatus.connected:
-        statusText = _isLoadingData 
-            ? "Loading data..." 
-            : "Connected";
+        statusText = _isLoadingData ? "Loading data..." : "Connected";
         descriptionText = _isLoadingData
             ? "Fetching channels and users"
             : "Preparing your workspace";
         break;
     }
-    
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const CircularProgressIndicator(),
         const SizedBox(height: 16),
-        Text(
-          statusText,
-          style: const TextStyle(fontSize: 18),
-        ),
+        Text(statusText, style: const TextStyle(fontSize: 18)),
         const SizedBox(height: 8),
         Text(
           descriptionText,

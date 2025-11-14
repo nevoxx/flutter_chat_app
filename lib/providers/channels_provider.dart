@@ -2,16 +2,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/channel.dart';
 
 // Channels Provider
-final channelsProvider = StateNotifierProvider<ChannelsController, List<Channel>>((ref) {
-  return ChannelsController();
-});
+final channelsProvider =
+    StateNotifierProvider<ChannelsController, List<Channel>>((ref) {
+      return ChannelsController();
+    });
 
 class ChannelsController extends StateNotifier<List<Channel>> {
   ChannelsController() : super([]);
 
   void setChannels(List<Channel> channels) {
     // Sort channels by sortOrder
-    final sortedChannels = [...channels]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final sortedChannels = [...channels]
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     state = sortedChannels;
   }
 
@@ -23,7 +25,7 @@ class ChannelsController extends StateNotifier<List<Channel>> {
   void updateChannel(Channel channel) {
     state = [
       for (final c in state)
-        if (c.id == channel.id) channel else c
+        if (c.id == channel.id) channel else c,
     ];
     _sortChannels();
   }
@@ -40,4 +42,3 @@ class ChannelsController extends StateNotifier<List<Channel>> {
     state = [];
   }
 }
-
