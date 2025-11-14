@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:flutter/foundation.dart';
 import '../services/storage_service.dart';
 
 enum SocketStatus { disconnected, connecting, connected }
@@ -46,16 +45,15 @@ class SocketController extends StateNotifier<SocketStatus> {
     });
 
     _socket!.onDisconnect((reason) {
-      debugPrint('[Socket] Disconnected: $reason');
       state = SocketStatus.disconnected;
     });
 
     _socket!.onError((error) {
-      debugPrint('[Socket] Error: $error');
+      // Handle error silently
     });
 
     _socket!.onConnectError((error) {
-      debugPrint('[Socket] ConnectError: $error');
+      // Handle connection error silently
     });
 
     _socket!.connect();

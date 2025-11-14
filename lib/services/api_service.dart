@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import '../models/server_info.dart';
 import '../models/user.dart';
+import '../models/connected_user.dart';
 import '../models/message.dart';
 import './storage_service.dart';
 
@@ -30,21 +31,19 @@ class ApiService {
   }
 
   Map<String, String> _getHeaders(String? token) {
-    final headers = {
-      'Content-Type': 'application/json',
-    };
-    
+    final headers = {'Content-Type': 'application/json'};
+
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
-    
+
     return headers;
   }
 
   Future<ServerInfo> fetchServerInfo() async {
     final baseUrl = await _getBaseUrl();
     final token = await _getToken();
-    
+
     if (token == null) {
       throw Exception('No access token found');
     }
@@ -64,10 +63,10 @@ class ApiService {
     }
   }
 
-  Future<List<User>> fetchUsers() async {
+  Future<List<ConnectedUser>> fetchUsers() async {
     final baseUrl = await _getBaseUrl();
     final token = await _getToken();
-    
+
     if (token == null) {
       throw Exception('No access token found');
     }
@@ -80,7 +79,9 @@ class ApiService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body) as List<dynamic>;
       return data
-          .map((item) => User.fromJson(item as Map<String, dynamic>))
+          .map(
+            (item) => ConnectedUser.fromJson(item as Map<String, dynamic>),
+          )
           .toList();
     } else if (response.statusCode == 401) {
       throw Exception('Unauthorized - Invalid or expired token');
@@ -92,7 +93,7 @@ class ApiService {
   Future<List<Message>> fetchMessages(String channelId) async {
     final baseUrl = await _getBaseUrl();
     final token = await _getToken();
-    
+
     if (token == null) {
       throw Exception('No access token found');
     }
@@ -113,5 +114,36 @@ class ApiService {
       throw Exception('Failed to fetch messages: ${response.statusCode}');
     }
   }
-}
 
+  Future<User> fetchCurrentUser() async {
+    final baseUrl = await _getBaseUrl();
+    final token = await _getToken();
+
+    if (token == null) {
+      throw Exception('No access token found');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/auth/me'),
+      headers: _getHeaders(token),
+    );
+
+    if (response.statusCode == 200) {
+      try {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return User.fromJson(data);
+      } catch (e) {
+        // Log the response body for debugging
+        throw Exception(
+          'Failed to parse user data: $e\nResponse body: ${response.body}',
+        );
+      }
+    } else if (response.statusCode == 401) {
+      throw Exception('Unauthorized - Invalid or expired token');
+    } else {
+      throw Exception(
+        'Failed to fetch current user: ${response.statusCode}\nResponse: ${response.body}',
+      );
+    }
+  }
+}

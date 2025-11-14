@@ -23,9 +23,12 @@ class MessageWidget extends ConsumerWidget {
     // Get user from the users list instead of message.user
     final usersAsync = ref.watch(usersProvider);
     final user = usersAsync.maybeWhen(
-      data: (users) {
+      data: (connectedUsers) {
         try {
-          return users.firstWhere((u) => u.id == message.userId);
+          final connectedUser = connectedUsers.firstWhere(
+            (cu) => cu.user.id == message.userId,
+          );
+          return connectedUser.user;
         } catch (e) {
           // User not found in list, fallback to message.user
           return message.user;

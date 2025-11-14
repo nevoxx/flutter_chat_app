@@ -23,7 +23,6 @@ class _LoadingPageState extends ConsumerState<LoadingPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize socket service as soon as possible to set up listeners
     ref.read(socketServiceProvider);
   }
 
@@ -43,13 +42,10 @@ class _LoadingPageState extends ConsumerState<LoadingPage> {
     });
 
     try {
-      // Fetch server info (which includes channels)
+      await ref.read(currentUserProvider.future);
       await ref.read(serverInfoProvider.notifier).fetchServerInfo();
-
-      // Fetch users
       await ref.read(usersProvider.notifier).fetchUsers();
 
-      // Check if data was loaded successfully
       final serverInfo = ref.read(serverInfoProvider);
       final users = ref.read(usersProvider);
 
@@ -61,7 +57,6 @@ class _LoadingPageState extends ConsumerState<LoadingPage> {
         throw users.error ?? Exception('Failed to load users');
       }
 
-      // Navigate to server view
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const ServerViewPage()),
@@ -81,10 +76,7 @@ class _LoadingPageState extends ConsumerState<LoadingPage> {
   }
 
   Future<void> _logout() async {
-    // Disconnect socket
     ref.read(socketProvider.notifier).disconnect();
-
-    // Clear all stored data
     await ref.read(authProvider.notifier).logout();
 
     if (mounted) {
@@ -99,7 +91,6 @@ class _LoadingPageState extends ConsumerState<LoadingPage> {
   Widget build(BuildContext context) {
     final socketStatus = ref.watch(socketProvider);
 
-    // Listen for socket connection and load data when connected
     ref.listen<SocketStatus>(socketProvider, (previous, next) {
       if (next == SocketStatus.connected && !_isLoadingData && !_hasError) {
         _checkAndLoadData();
@@ -130,7 +121,7 @@ class _LoadingPageState extends ConsumerState<LoadingPage> {
       case SocketStatus.connected:
         statusText = _isLoadingData ? "Loading data..." : "Connected";
         descriptionText = _isLoadingData
-            ? "Fetching channels and users"
+            ? "Fetching user data, channels and users"
             : "Preparing your workspace";
         break;
     }

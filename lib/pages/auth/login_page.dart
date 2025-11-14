@@ -209,7 +209,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             // Create account button
                             TextButton(
                               onPressed: () {
-                                // TODO: Navigate to create account page
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text(

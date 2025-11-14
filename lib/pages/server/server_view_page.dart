@@ -66,10 +66,7 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
     );
 
     if (shouldLogout == true) {
-      // Disconnect socket
       ref.read(socketProvider.notifier).disconnect();
-
-      // Clear all stored data
       await ref.read(authProvider.notifier).logout();
 
       if (context.mounted) {
@@ -108,19 +105,17 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 900;
 
-    // Watch providers
     final channels = ref.watch(channelsProvider);
     final usersAsync = ref.watch(usersProvider);
     final selectedChannelId = ref.watch(selectedChannelProvider);
-
-    // Listen for channel changes outside of build
+    final currentUserAsync = ref.watch(currentUserProvider);
+    final currentUserId = currentUserAsync.requireValue.id;
     ref.listen<String?>(selectedChannelProvider, (previous, next) {
       if (next != null && next != previous) {
         _loadMessagesForChannel(next);
       }
     });
 
-    // Get current channel name
     final currentChannel = channels.firstWhere(
       (ch) => ch.id == selectedChannelId,
       orElse: () => channels.isNotEmpty
@@ -143,32 +138,27 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
       ),
       body: Row(
         children: [
-          // Channels Sidebar
           if (isDesktop) ...[
             ChannelListWidget(
               channels: channels,
               selectedChannelId: selectedChannelId,
               onChannelSelected: _onChannelSelected,
-              onAddChannel: () {
-                // TODO: Implement add channel
-              },
+              onAddChannel: () {},
             ),
             const VerticalDivider(width: 1),
           ],
 
-          // Main Content Area
           Expanded(
             child: Column(
               children: [
-                // Messages Area
-                Expanded(child: MessagesAreaWidget(currentUserId: 'me')),
-                // Message Input
+                Expanded(
+                  child: MessagesAreaWidget(currentUserId: currentUserId),
+                ),
                 MessageInputWidget(onSendMessage: _onSendMessage),
               ],
             ),
           ),
 
-          // Users Sidebar
           if (isDesktop) ...[
             const VerticalDivider(width: 1),
             usersAsync.when(
@@ -176,7 +166,7 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
                 users: users,
                 isCollapsed: _usersSidebarCollapsed,
                 onToggleCollapse: _onToggleUsersSidebar,
-                currentUserId: 'me',
+                currentUserId: currentUserId,
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, stack) => Center(child: Text('Error: $err')),
@@ -184,16 +174,15 @@ class _ServerViewPageState extends ConsumerState<ServerViewPage> {
           ],
         ],
       ),
-      // Mobile/Tablet Drawers
       drawer: (!isDesktop)
           ? ChannelsDrawerWidget(
               onChannelSelected: _onChannelSelected,
-              onAddChannel: () {
-                // TODO: Implement add channel
-              },
+              onAddChannel: () {},
             )
           : null,
-      endDrawer: (!isDesktop) ? UsersDrawerWidget(currentUserId: 'me') : null,
+      endDrawer: (!isDesktop)
+          ? UsersDrawerWidget(currentUserId: currentUserId)
+          : null,
     );
   }
 }

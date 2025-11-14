@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/user.dart';
+import '../../models/connection_state.dart' as models;
 
 class UserAvatar extends StatelessWidget {
   final User user;
@@ -8,6 +9,7 @@ class UserAvatar extends StatelessWidget {
   final String? currentUserId;
   final String? accessToken;
   final String dimension;
+  final models.ConnectionState? connectionState;
 
   const UserAvatar({
     super.key,
@@ -17,17 +19,20 @@ class UserAvatar extends StatelessWidget {
     this.currentUserId,
     this.accessToken,
     this.dimension = 'small',
+    this.connectionState,
   });
 
   @override
   Widget build(BuildContext context) {
     final isCurrentUser = currentUserId != null && user.id == currentUserId;
-    final isOnline = user.connectionState?.isOnline ?? false;
+    final isOnline = connectionState?.isOnline ?? false;
     final baseAvatarUrl = user.profilePicture?.attachmentUrl;
-    
+
     // Append access token and dimension to the URL if available
     String? avatarUrl = baseAvatarUrl;
-    if (baseAvatarUrl != null && baseAvatarUrl.isNotEmpty && accessToken != null) {
+    if (baseAvatarUrl != null &&
+        baseAvatarUrl.isNotEmpty &&
+        accessToken != null) {
       avatarUrl = '$baseAvatarUrl?token=$accessToken&dimension=$dimension';
     }
 
@@ -47,10 +52,7 @@ class UserAvatar extends StatelessWidget {
       child: avatarUrl == null || avatarUrl.isEmpty
           ? Text(
               user.displayName[0].toUpperCase(),
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: radius * 0.75,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: radius * 0.75),
             )
           : null,
     );
@@ -85,4 +87,3 @@ class UserAvatar extends StatelessWidget {
     );
   }
 }
-

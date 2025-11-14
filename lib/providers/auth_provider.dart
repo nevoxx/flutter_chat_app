@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import '../main.dart';
 import '../pages/loading/loading_page.dart';
 import '../services/storage_service.dart';
+import '../services/api_service.dart';
+import '../models/user.dart';
 
 final authProvider = StateNotifierProvider<AuthController, AsyncValue<void>>((
   ref,
@@ -18,6 +20,13 @@ final accessTokenProvider = FutureProvider<String?>((ref) async {
   return await storage.getAccessToken();
 });
 
+// Provider to get the current user
+final currentUserProvider = FutureProvider<User>((ref) async {
+  final apiService = ref.watch(apiServiceProvider);
+  // Let errors propagate so they can be handled properly
+  return await apiService.fetchCurrentUser();
+});
+
 class AuthController extends StateNotifier<AsyncValue<void>> {
   AuthController(this.ref) : super(const AsyncValue.data(null));
 
@@ -27,13 +36,13 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       final storage = ref.read(storageServiceProvider);
-      
+
       // Save server URL first
       await storage.setServerUrl(serverUrl);
-      
+
       // Get the formatted server URL
       final formattedUrl = await storage.getServerUrl();
-      
+
       final res = await http.post(
         Uri.parse('$formattedUrl/auth/token'),
         headers: {'Content-Type': 'application/json'},
@@ -44,6 +53,9 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
         final data = jsonDecode(res.body);
         await storage.setAccessToken(data['accessToken']);
         await storage.setRefreshToken(data['refreshToken']);
+
+        // Invalidate currentUserProvider to trigger fetch after token is saved
+        ref.invalidate(currentUserProvider);
 
         state = const AsyncValue.data(null);
 

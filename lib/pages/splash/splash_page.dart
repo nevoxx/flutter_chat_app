@@ -19,24 +19,21 @@ class _SplashPageState extends ConsumerState<SplashPage> {
   }
 
   Future<void> _checkAuth() async {
-    // Small delay to show splash screen
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     final storage = ref.read(storageServiceProvider);
     final isLoggedIn = await storage.isLoggedIn();
 
     if (!mounted) return;
 
     if (isLoggedIn) {
-      // User has stored credentials, go to loading page
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoadingPage()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoadingPage()));
     } else {
-      // No stored credentials, go to login page
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginPage()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginPage()));
     }
   }
 
@@ -62,18 +59,10 @@ class _SplashPageState extends ConsumerState<SplashPage> {
               SizedBox(height: 24),
               Text(
                 'Chat App',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
-              Text(
-                'Loading...',
-                style: TextStyle(
-                  fontSize: 16,
-                ),
-              ),
+              Text('Loading...', style: TextStyle(fontSize: 16)),
             ],
           ),
         ),
@@ -81,4 +70,3 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     );
   }
 }
-

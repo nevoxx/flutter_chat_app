@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/user.dart';
+import '../../models/connected_user.dart';
 import '../../providers/auth_provider.dart';
 import 'user_avatar_widget.dart';
 
 class UserListWidget extends ConsumerStatefulWidget {
-  final List<User> users;
+  final List<ConnectedUser> users;
   final bool isCollapsed;
   final VoidCallback onToggleCollapse;
   final String currentUserId;
@@ -26,22 +26,24 @@ class _UserListWidgetState extends ConsumerState<UserListWidget> {
   @override
   Widget build(BuildContext context) {
     // Sort users: online users first, then by display name
-    final sortedUsers = List<User>.from(widget.users)
+    final sortedUsers = List<ConnectedUser>.from(widget.users)
       ..sort((a, b) {
-        final aOnline = a.connectionState?.isOnline ?? false;
-        final bOnline = b.connectionState?.isOnline ?? false;
-        
+        final aOnline = a.connectionState.isOnline;
+        final bOnline = b.connectionState.isOnline;
+
         // First, sort by online status (online users first)
         if (aOnline != bOnline) {
           return bOnline ? 1 : -1; // Online users come first
         }
-        
+
         // Then, sort by display name
-        return a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase());
+        return a.user.displayName.toLowerCase().compareTo(
+          b.user.displayName.toLowerCase(),
+        );
       });
 
     final onlineUsers = sortedUsers
-        .where((u) => u.connectionState?.isOnline ?? false)
+        .where((u) => u.connectionState.isOnline)
         .length;
 
     return Container(
@@ -51,7 +53,7 @@ class _UserListWidgetState extends ConsumerState<UserListWidget> {
         children: [
           // Header
           Container(
-            padding: widget.isCollapsed 
+            padding: widget.isCollapsed
                 ? const EdgeInsets.symmetric(horizontal: 6, vertical: 8)
                 : const EdgeInsets.all(16),
             child: Row(
@@ -97,27 +99,28 @@ class _UserListWidgetState extends ConsumerState<UserListWidget> {
     );
   }
 
-  Widget _buildExpandedUsersList(List<User> sortedUsers) {
+  Widget _buildExpandedUsersList(List<ConnectedUser> sortedUsers) {
     return ListView.builder(
       itemCount: sortedUsers.length,
       itemBuilder: (context, index) {
-        final user = sortedUsers[index];
-        return _buildUserItem(user);
+        final connectedUser = sortedUsers[index];
+        return _buildUserItem(connectedUser);
       },
     );
   }
 
-  Widget _buildCollapsedUsersList(List<User> sortedUsers) {
+  Widget _buildCollapsedUsersList(List<ConnectedUser> sortedUsers) {
     return ListView.builder(
       itemCount: sortedUsers.length,
       itemBuilder: (context, index) {
-        final user = sortedUsers[index];
-        return _buildCollapsedUserItem(user);
+        final connectedUser = sortedUsers[index];
+        return _buildCollapsedUserItem(connectedUser);
       },
     );
   }
 
-  Widget _buildUserItem(User user) {
+  Widget _buildUserItem(ConnectedUser connectedUser) {
+    final user = connectedUser.user;
     final isCurrentUser = user.id == widget.currentUserId;
     final accessToken = ref.watch(accessTokenProvider).value;
 
@@ -128,6 +131,7 @@ class _UserListWidgetState extends ConsumerState<UserListWidget> {
         showOnlineStatus: true,
         currentUserId: widget.currentUserId,
         accessToken: accessToken,
+        connectionState: connectedUser.connectionState,
       ),
       title: Text(
         user.displayName,
@@ -142,7 +146,8 @@ class _UserListWidgetState extends ConsumerState<UserListWidget> {
     );
   }
 
-  Widget _buildCollapsedUserItem(User user) {
+  Widget _buildCollapsedUserItem(ConnectedUser connectedUser) {
+    final user = connectedUser.user;
     final accessToken = ref.watch(accessTokenProvider).value;
 
     return Tooltip(
@@ -156,6 +161,7 @@ class _UserListWidgetState extends ConsumerState<UserListWidget> {
             showOnlineStatus: true,
             currentUserId: widget.currentUserId,
             accessToken: accessToken,
+            connectionState: connectedUser.connectionState,
           ),
         ),
       ),

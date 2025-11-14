@@ -1,11 +1,11 @@
-class UserConnectionState {
+class ConnectionState {
   final bool isOnline;
   final DateTime? connectedAt;
   final String? currentChannelId;
   final bool? isAudioMuted;
   final bool? isMicrophoneMuted;
 
-  const UserConnectionState({
+  const ConnectionState({
     required this.isOnline,
     this.connectedAt,
     this.currentChannelId,
@@ -13,8 +13,8 @@ class UserConnectionState {
     this.isMicrophoneMuted,
   });
 
-  factory UserConnectionState.fromJson(Map<String, dynamic> json) {
-    return UserConnectionState(
+  factory ConnectionState.fromJson(Map<String, dynamic> json) {
+    return ConnectionState(
       isOnline: json['isOnline'] as bool,
       connectedAt: json['connectedAt'] != null
           ? DateTime.parse(json['connectedAt'] as String)
@@ -35,14 +35,14 @@ class UserConnectionState {
     };
   }
 
-  UserConnectionState copyWith({
+  ConnectionState copyWith({
     bool? isOnline,
     DateTime? connectedAt,
     String? currentChannelId,
     bool? isAudioMuted,
     bool? isMicrophoneMuted,
   }) {
-    return UserConnectionState(
+    return ConnectionState(
       isOnline: isOnline ?? this.isOnline,
       connectedAt: connectedAt ?? this.connectedAt,
       currentChannelId: currentChannelId ?? this.currentChannelId,
