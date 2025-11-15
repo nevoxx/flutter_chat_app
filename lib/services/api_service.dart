@@ -5,6 +5,7 @@ import '../models/server_info.dart';
 import '../models/user.dart';
 import '../models/connected_user.dart';
 import '../models/message.dart';
+import '../models/join_voice_dto.dart';
 import './storage_service.dart';
 
 // Provider for ApiService
@@ -144,6 +145,51 @@ class ApiService {
       throw Exception(
         'Failed to fetch current user: ${response.statusCode}\nResponse: ${response.body}',
       );
+    }
+  }
+
+  Future<JoinVoiceDto> joinVoice(String channelId) async {
+    final baseUrl = await _getBaseUrl();
+    final token = await _getToken();
+
+    if (token == null) {
+      throw Exception('No access token found');
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/channels/$channelId/join-voice'),
+      headers: _getHeaders(token),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return JoinVoiceDto.fromJson(data);
+    } else if (response.statusCode == 401) {
+      throw Exception('Unauthorized - Invalid or expired token');
+    } else {
+      throw Exception('Failed to join voice: ${response.statusCode}');
+    }
+  }
+
+  Future<void> leaveVoice() async {
+    final baseUrl = await _getBaseUrl();
+    final token = await _getToken();
+
+    if (token == null) {
+      throw Exception('No access token found');
+    }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/leave-voice'),
+      headers: _getHeaders(token),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      if (response.statusCode == 401) {
+        throw Exception('Unauthorized - Invalid or expired token');
+      } else {
+        throw Exception('Failed to leave voice: ${response.statusCode}');
+      }
     }
   }
 }
